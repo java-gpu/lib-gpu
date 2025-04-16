@@ -1,5 +1,3 @@
-#!/bin/zsh
-
 export BUILD_FOLDER="$1"
 export COMMAND="$2"
 export lombokVersion="$3"
@@ -37,7 +35,9 @@ export listJavaFile=(
     "${srcFolder}/input/TextInputWrapper.java"
 )
 
-source ../support-scripts/generateJniHeader.sh "${BUILD_FOLDER}" "${COMMAND}" ${lombokVersion}
+includeScriptPath=../support-scripts/generateJniHeader.sh
+chmod +x "${includeScriptPath}"
+. "${includeScriptPath}" "${BUILD_FOLDER}" "${COMMAND}" "${lombokVersion}"
 
 echo "Executing command ${COMMAND}"
 if [[ "${COMMAND}" = "generateJNIHeaders" ]]; then

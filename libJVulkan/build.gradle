@@ -8,13 +8,10 @@ tasks.register('generateJNIHeaders', Exec) {
     dependsOn project(":common").tasks.named("generateJNIHeaders")
 
     if (rootProject.ext.isMac || rootProject.ext.isLinux) {
-        println "Building ${project.name}:${it.name} on macOS..."
         commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
     } else if (rootProject.ext.isLinux) {
-        println "Building ${project.name}:${it.name} on Linux..."
         commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
     } else if (rootProject.ext.isWindows) {
-        println "Building ${project.name}:${it.name} on Windows..."
         commandLine "cmd", "/c", 'libJMetalBuild.bat', "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
     } else {
         commandLine "echo", "No native build support for ${rootProject.ext.osName}"
@@ -25,7 +22,6 @@ tasks.register('generateJNIHeaders', Exec) {
 tasks.register('generateNativeBuild', Exec) {
     dependsOn generateJNIHeaders
     if (rootProject.ext.isMac) {
-        println "Building ${project.name}:${it.name} on macOS..."
         commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild"
     } else {
         commandLine "echo", "No native build support for ${rootProject.ext.osName}"
@@ -35,7 +31,6 @@ tasks.register('generateNativeBuild', Exec) {
 tasks.register('compileNative', Exec) {
     dependsOn generateNativeBuild
     if (rootProject.ext.isMac) {
-        println "Building ${project.name}:${it.name} on macOS..."
         commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative"
     }else {
         commandLine "echo", "No native build support for ${rootProject.ext.osName}"

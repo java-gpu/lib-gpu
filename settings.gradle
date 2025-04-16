@@ -1,2 +1,2 @@
-rootProject.name = 'libGpu'
+rootProject.name = 'lib-gpu'
 include "libJMetal", "common", "libJVulkan", "libJDirectX"

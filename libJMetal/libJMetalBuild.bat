@@ -5,7 +5,6 @@ set COMMAND=%2
 set lombokVersion=%3
 set javaPackagePath=tech\gpu\java\lib\metal
 set srcFolder=src\main\java\%javaPackagePath%
-set headerOutputFolder=build\native
 
 setlocal enabledelayedexpansion
 
