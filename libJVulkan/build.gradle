@@ -1,0 +1,60 @@
+dependencies {
+   implementation(project(":common"))
+}
+
+// JNI header generation
+tasks.register('generateJNIHeaders', Exec) {
+    dependsOn classes
+    dependsOn project(":common").tasks.named("generateJNIHeaders")
+
+    if (rootProject.ext.isMac || rootProject.ext.isLinux) {
+        println "Building ${project.name}:${it.name} on macOS..."
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
+    } else if (rootProject.ext.isLinux) {
+        println "Building ${project.name}:${it.name} on Linux..."
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
+    } else if (rootProject.ext.isWindows) {
+        println "Building ${project.name}:${it.name} on Windows..."
+        commandLine "cmd", "/c", 'libJMetalBuild.bat', "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
+    } else {
+        commandLine "echo", "No native build support for ${rootProject.ext.osName}"
+    }
+}
+
+// CMake + native build
+tasks.register('generateNativeBuild', Exec) {
+    dependsOn generateJNIHeaders
+    if (rootProject.ext.isMac) {
+        println "Building ${project.name}:${it.name} on macOS..."
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild"
+    } else {
+        commandLine "echo", "No native build support for ${rootProject.ext.osName}"
+    }
+}
+
+tasks.register('compileNative', Exec) {
+    dependsOn generateNativeBuild
+    if (rootProject.ext.isMac) {
+        println "Building ${project.name}:${it.name} on macOS..."
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative"
+    }else {
+        commandLine "echo", "No native build support for ${rootProject.ext.osName}"
+    }
+}
+
+tasks.build.dependsOn compileNative
+
+// Run Java with native library
+if (rootProject.ext.isMac) {
+    tasks.register('runApp', JavaExec) {
+        dependsOn build
+        mainClass.set('tech.gpu.lib.metal.MetalWrapper')
+        classpath = sourceSets.main.runtimeClasspath
+        jvmArgs = ["-Djava.library.path=${layout.buildDirectory.asFile.get().absolutePath}/libs/native:${layout.buildDirectory.asFile.get().absolutePath}/libs"]
+    }
+} else {
+    tasks.register('runApp') {
+        dependsOn build
+        println "Run not supported"
+    }
+}
