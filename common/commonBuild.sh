@@ -6,9 +6,8 @@ export lombokVersion="$3"
 export javaPackagePath="tech/gpu/lib"
 export srcFolder="src/main/java/${javaPackagePath}"
 export headerOutputFolder="build/native"
-export lombokGradleCacheFolder="${HOME}/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/${lombokVersion}"
 
-listJavaFile=(
+export listJavaFile=(
     "${srcFolder}/common/GpuInfo.java"
     "${srcFolder}/util/CommonNativeLoader.java"
     "${srcFolder}/util/Disposable.java"
@@ -38,35 +37,9 @@ listJavaFile=(
     "${srcFolder}/input/TextInputWrapper.java"
 )
 
-generateJNIHeaders() {
-    echo "Lombok Version [${lombokVersion}], Cache folder [$lombokGradleCacheFolder]"
-    export lombokJarFile=$(find "${lombokGradleCacheFolder}" | grep "$lombokVersion.jar")
-    echo "Lombok Jar File [${lombokJarFile}]"
-    set -x
-    javac -h "${headerOutputFolder}" "${listJavaFile[@]}" -d "${BUILD_FOLDER}/classes/java/main/${javaPackagePath}" -cp "${lombokJarFile}"
-}
-
-generateNativeBuild() {
-  set -x
-  pushd $(pwd)
-  cd "src/main/native"
-  cmake -B"${BUILD_FOLDER}/native" .
-  popd
-}
-
-compileNative() {
-  set -x
-  pushd $(pwd)
-  cd "${BUILD_FOLDER}/native"
-  cmake --build .
-  popd
-}
+source ../support-scripts/generateJniHeader.sh "${BUILD_FOLDER}" "${COMMAND}" ${lombokVersion}
 
 echo "Executing command ${COMMAND}"
 if [[ "${COMMAND}" = "generateJNIHeaders" ]]; then
   generateJNIHeaders
-elif [[ "${COMMAND}" = "generateNativeBuild" ]]; then
-  generateNativeBuild
-elif [[ "${COMMAND}" = "compileNative" ]]; then
-  compileNative
 fi

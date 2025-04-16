@@ -1,16 +1,19 @@
 // JNI header generation
 tasks.register('generateJNIHeaders', Exec) {
     dependsOn classes
+    mustRunAfter classes
+    dependsOn build
+    mustRunAfter build
 
     if (rootProject.ext.isMac) {
         println "Building ${project.name}:${it.name} on ${rootProject.ext.osName}..."
-        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/commonBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
     } else if (rootProject.ext.isLinux) {
         println "Building ${project.name}:${it.name} on ${rootProject.ext.osName}..."
-        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/commonBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
     } else if (rootProject.ext.isWindows) {
         println "Building ${project.name}:${it.name} on ${rootProject.ext.osName}..."
-        commandLine "cmd", "/c", 'libJMetalBuild.bat', "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
+        commandLine "cmd", "/c", 'commonBuild.bat', "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
     } else {
         commandLine "echo", "No native build support for ${rootProject.ext.osName}"
     }
