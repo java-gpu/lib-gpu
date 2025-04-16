@@ -10,7 +10,8 @@ set headerOutputFolder=build\native
 setlocal enabledelayedexpansion
 
 :: Simulate an array
-set listJavaFile=%srcFolder%\common\GpuInfo.java
+set listJavaFile=%srcFolder%\GpuInfo.java
+set listJavaFile=%srcFolder%\GpuManager.java
 set "listJavaFile=%listJavaFile% %srcFolder%\util\CommonNativeLoader.java"
 set "listJavaFile=%listJavaFile% %srcFolder%\util\Disposable.java"
 set "listJavaFile=%listJavaFile% %srcFolder%\graphics\Texture.java"

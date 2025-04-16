@@ -17,7 +17,7 @@
 package tech.gpu.lib.graphics;
 
 import tech.gpu.lib.Application;
-import tech.gpu.lib.common.GpuInfo;
+import tech.gpu.lib.GpuManager;
 import tech.gpu.lib.ex.PixelFormatNotSupportedException;
 import tech.gpu.lib.util.CommonNativeLoader;
 
@@ -101,29 +101,29 @@ public class Texture {
     // Native method to load the texture
     protected long loadTexture(String fullPath, boolean useMipMaps) throws PixelFormatNotSupportedException {
         var converter = app.getGraphics().getPixelFormatConverter();
-        return loadTexture(GpuInfo.gpuSelected, fullPath, useMipMaps, converter.toNativeFormat(converter.getDefaultFormat()));
+        return loadTexture(GpuManager.gpuSelected.getPointer(), fullPath, useMipMaps, converter.toNativeFormat(converter.getDefaultFormat()));
     }
 
     protected long loadTexture(String fullPath, boolean useMipMaps, int pixelFormat) {
-        return loadTexture(GpuInfo.gpuSelected, fullPath, useMipMaps, pixelFormat);
+        return loadTexture(GpuManager.gpuSelected.getPointer(), fullPath, useMipMaps, pixelFormat);
     }
 
     protected native long loadTexture(long gpuPointer, String fullPath, boolean useMipMaps, int pixelFormat);
 
     protected long loadTextureFromStream(InputStream imageStream, boolean useMipMaps) throws PixelFormatNotSupportedException {
         var converter = app.getGraphics().getPixelFormatConverter();
-        return loadTextureFromStream(GpuInfo.gpuSelected, imageStream, useMipMaps, converter.toNativeFormat(converter.getDefaultFormat()));
+        return loadTextureFromStream(GpuManager.gpuSelected.getPointer(), imageStream, useMipMaps, converter.toNativeFormat(converter.getDefaultFormat()));
     }
 
     protected long loadTextureFromStream(InputStream imageStream, boolean useMipMaps, int pixelFormat) {
-        return loadTextureFromStream(GpuInfo.gpuSelected, imageStream, useMipMaps, pixelFormat);
+        return loadTextureFromStream(GpuManager.gpuSelected.getPointer(), imageStream, useMipMaps, pixelFormat);
     }
 
     protected native long loadTextureFromStream(long gpuPointer, InputStream imageStream, boolean useMipMaps, int pixelFormat);
 
     // Create texture
     protected long createEmptyTexture(int width, int height, int pixelFormat) {
-        return createEmptyTexture(GpuInfo.gpuSelected, width, height, pixelFormat);
+        return createEmptyTexture(GpuManager.gpuSelected.getPointer(), width, height, pixelFormat);
     }
 
     protected native long createEmptyTexture(long gpuPointer, int width, int height, int pixelFormat);

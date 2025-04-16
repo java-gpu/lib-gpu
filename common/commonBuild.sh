@@ -6,7 +6,8 @@ export srcFolder="src/main/java/${javaPackagePath}"
 export headerOutputFolder="build/native"
 
 export listJavaFile=(
-    "${srcFolder}/common/GpuInfo.java"
+    "${srcFolder}/GpuInfo.java"
+    "${srcFolder}/GpuManager.java"
     "${srcFolder}/util/CommonNativeLoader.java"
     "${srcFolder}/util/Disposable.java"
     "${srcFolder}/graphics/Texture.java"

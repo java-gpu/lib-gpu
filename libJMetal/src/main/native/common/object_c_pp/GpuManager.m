@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
-#include "GpuInfo.h"
+#include "GpuManager.h"
 
 const char* getSystemDefaultGPUName() {
     @autoreleasepool {

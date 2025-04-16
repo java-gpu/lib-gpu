@@ -1,22 +1,26 @@
 package tech.gpu.lib.metal;
 
-import tech.gpu.lib.common.GpuInfo;
+import tech.gpu.lib.GpuInfo;
+import tech.gpu.lib.GpuManager;
 import tech.gpu.lib.ex.PixelFormatNotSupportedException;
 import tech.gpu.lib.graphics.PixelFormat;
 import tech.gpu.lib.graphics.Texture;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 public class MetalWrapper {
 
     public static void main(String[] args) throws PixelFormatNotSupportedException {
         try {
-            System.out.println("Default device: " + GpuInfo.getSystemDefaultGPUName());
-            System.out.println("All GPUs: " + Arrays.toString(GpuInfo.getAllGPUNames()));
-            System.out.println("GPU count: " + GpuInfo.getGPUCount());
-            System.out.println("GPU at index 0: " + GpuInfo.getGPUNameByPointer(GpuInfo.getGPUPointerAtIndex(0)));
+            List<GpuInfo> gpus = new LinkedList<>(GpuManager.gpuMap.values());
+            System.out.println("Default device: " + GpuManager.getSystemDefaultGPUName());
+            System.out.println("All GPUs: " + Arrays.toString(GpuManager.getAllGPUNames()));
+            System.out.println("GPU count: " + gpus.size());
+            System.out.println("GPU at index 0: " + gpus.getFirst().getName());
         } finally {
-            GpuInfo.releaseAllGpus();
+            GpuManager.releaseAllGpus();
         }
 
         MetalRenderer renderer = new MetalRenderer(0);

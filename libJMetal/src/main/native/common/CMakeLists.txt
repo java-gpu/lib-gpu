@@ -23,9 +23,9 @@ include_directories(
 )
 
 add_library(GpuCommon SHARED
-    jni/GpuInfo.cpp
+    jni/GpuManager.cpp
     jni/Texture.cpp
-    object_c_pp/GpuInfo.m
+    object_c_pp/GpuManager.m
     object_c_pp/Texture.m
 )
 

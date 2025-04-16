@@ -1,27 +1,28 @@
-package tech.gpu.lib.common;
+package tech.gpu.lib;
 
 import tech.gpu.lib.util.CommonNativeLoader;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class GpuInfo {
+public class GpuManager {
 
-    public static Map<Integer, Long> gpuMap;
-    public static Long gpuSelected = -1L;
+    public static Map<Integer, GpuInfo> gpuMap;
+    public static GpuInfo gpuSelected = null;
 
     static {
         CommonNativeLoader.load();
         refreshGpuList();
         String defaultGpuName = getSystemDefaultGPUName();
-        for (Map.Entry<Integer, Long> entry : gpuMap.entrySet()) {
-            long pointer = entry.getValue();
+        for (Map.Entry<Integer, GpuInfo> entry : gpuMap.entrySet()) {
+            GpuInfo gpuInfo = entry.getValue();
+            long pointer = gpuInfo.getPointer();
             if (defaultGpuName.equalsIgnoreCase(getGPUNameByPointer(pointer))) {
-                gpuSelected = pointer;
+                gpuSelected = gpuInfo;
             }
         }
-        if (gpuSelected < 0) {
-            gpuSelected = gpuMap.entrySet().iterator().next().getValue();
+        if (gpuSelected == null) {
+            gpuSelected = gpuMap.values().iterator().next();
         }
     }
 
@@ -30,7 +31,8 @@ public class GpuInfo {
         int count = getGPUCount();
         for (var i = 0; i < count; i++) {
             long pointer = getGPUPointerAtIndex(i);
-            gpuMap.put(i, pointer);
+            String name = getGPUNameByPointer(pointer);
+            gpuMap.put(i, new GpuInfo(i, name, pointer));
         }
     }
 
@@ -47,10 +49,10 @@ public class GpuInfo {
     public static native void releaseGpu(long pointer);
 
     public static void releaseAllGpus() {
-        gpuMap.forEach((k, v) -> releaseGpu(v));
+        gpuMap.forEach((k, v) -> releaseGpu(v.getPointer()));
     }
 
-    public static void changeSelectedGpu(long selectedPointer) {
+    public static void changeSelectedGpu(GpuInfo selectedPointer) {
         gpuSelected = selectedPointer;
     }
 }
