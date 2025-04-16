@@ -1,0 +1,178 @@
+/**
+ * Define build script dependencies.
+ */
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        // dependencies {
+        //     classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootPluginVersion")
+        // }
+    }
+    // dependencies {
+    //     classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootPluginVersion")
+    //     classpath "io.spring.gradle:dependency-management-plugin:$springDependenciesManagementVersion"
+    //     classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:latest.release"
+    //     classpath "io.freefair.gradle:lombok-plugin:latest.release"
+    // }
+}
+
+plugins {
+    // id 'org.springframework.boot' version "$springBootPluginVersion" apply false
+    // id 'io.spring.dependency-management' version "$springDependenciesManagementVersion" apply false
+    id "io.freefair.lombok" version "${lombokPluginVersion}" apply false
+    // id "org.sonarqube" version "${sonarqubePluginVersion}" apply false
+    // id("org.hibernate.orm") version "${hibernatePluginVersion}" apply false
+}
+
+ext {
+    osName = System.getProperty("os.name").toLowerCase()
+    isMac = osName.contains("mac")
+    isWindows = osName.contains("win")
+    isLinux = osName.contains("nux") || osName.contains("nix")
+}
+
+configure(subprojects) {
+    buildscript {
+        repositories {
+            mavenLocal()
+            mavenCentral()
+            // dependencies {
+            //     classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootPluginVersion")
+            // }
+        }
+        // dependencies {
+        //     classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootPluginVersion")
+        //     classpath "io.spring.gradle:dependency-management-plugin:$springDependenciesManagementVersion"
+        //     classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:latest.release"
+        //     classpath "io.freefair.gradle:lombok-plugin:latest.release"
+        // }
+    }
+
+    project.tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+
+//    def isLib = false;
+//    for (def libPro : listJavaLibrariesProject) {
+//        if (libPro == project.name) {
+//            isLib = true;
+//            break;
+//        }
+//    }
+
+    // Sub projects plugin
+    // apply plugin: 'io.spring.dependency-management'
+    // if (!isLib) {
+    //     apply plugin: 'org.springframework.boot'
+    // }
+    apply plugin: 'java-library'
+    apply plugin: 'jacoco'
+    // apply plugin: 'application'
+    apply plugin: 'io.freefair.lombok'
+    // apply plugin: 'org.sonarqube'
+    // apply plugin: 'org.hibernate.orm'
+
+    // Sub projects version
+    group = "${applicationGroup}"
+    version = "${applicationVersion}"
+
+    // Sub projects java version
+    java {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(javaSourceCompatibility))
+        }
+    }
+
+    // Sub projects repositories
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url = "https://s01.oss.sonatype.org/content/groups/public/"
+        }
+        maven {
+            url = "https://packages.confluent.io/maven/"
+        }
+    }
+
+    // Sub projects dependencies management
+    // dependencyManagement {
+    //     imports {
+    //         mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootPluginVersion"
+    //         mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+    //         mavenBom "org.springframework.cloud:spring-cloud-dependencies:$springCloudDependenciesVersion"
+    //     }
+    // }
+
+    test {
+        useJUnitPlatform()
+
+        // report is always generated after tests run
+        finalizedBy jacocoTestReport
+
+        jacoco {
+            classDumpDir = layout.buildDirectory.file("jacoco/classpathdumps").get().asFile
+            enabled = true
+            destinationFile = layout.buildDirectory.file("jacoco/${name}.exec").get().asFile
+            includes = []
+            excludes = []
+            excludeClassLoaders = []
+            includeNoLocationClasses = false
+            sessionId = UUID.randomUUID().toString()
+            dumpOnExit = true
+            classDumpDir = null
+            output = JacocoTaskExtension.Output.FILE
+            address = "localhost"
+            port = 6300
+            jmx = false
+        }
+    }
+
+    jacocoTestReport {
+        // tests are required to run before generating the report
+        dependsOn test
+        mustRunAfter test
+
+        reports {
+            html.required = true
+            xml.required = true
+            csv.required = true
+            html.outputLocation = layout.buildDirectory.dir("jacoco/html").get().asFile
+            xml.outputLocation = layout.buildDirectory.file("jacoco/jacoco-report.xml").get().asFile
+            csv.outputLocation = layout.buildDirectory.file("jacoco/jacoco-report.csv").get().asFile
+        }
+
+        afterEvaluate {
+            getClassDirectories().setFrom(classDirectories.files.collect {
+                fileTree(dir: it, exclude: ['**/ex/*', '**/pojo/*', '**/model/*', '**/dto/*', '**/config/*'])
+            })
+        }
+    }
+
+    javadoc {
+        exclude("**/InternalServiceConfig#InternalServiceConfig")
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+
+    afterEvaluate {
+        dependencies {
+            compileOnly("org.projectlombok:lombok:${lombokVersion}")
+
+            // if (!isLib) {
+            //     // Spring boot
+            //     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
+
+            //     // Database
+            //     implementation group: 'org.postgresql', name: 'postgresql', version: "${postgresqlVersion}"
+            // }
+
+            // Test
+            // testImplementation 'org.springframework.boot:spring-boot-starter-test'
+            testImplementation group: 'org.mockito', name: 'mockito-core', version: "${mockitoVersion}"
+            // testImplementation group: 'com.h2database', name: 'h2', version: "${h2Version}"
+            testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+            testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        }
+    }
+}

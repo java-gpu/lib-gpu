@@ -1,0 +1,2 @@
+rootProject.name = 'libGpu'
+include "libJMetal", "common", "libJVulkan", "libJDirectX"
