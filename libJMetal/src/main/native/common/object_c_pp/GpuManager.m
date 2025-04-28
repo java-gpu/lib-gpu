@@ -61,5 +61,5 @@ const char* getMetalGPUNameAtIndex(size_t index) {
         NSString* gpuName = device.name;
         return [gpuName UTF8String];  // Return the name as a C-string
     }
-    return "Null returned";  // Default return if device is NULL
+    return "returned";  // Default return if device is NULL
 }

@@ -150,6 +150,11 @@ configure(subprojects) {
         }
     }
 
+    processTestResources {
+        from("../share-resources/test-resources")
+        include '**/*'
+    }
+
     javadoc {
         exclude("**/InternalServiceConfig#InternalServiceConfig")
         options.addStringOption('Xdoclint:none', '-quiet')
@@ -159,18 +164,8 @@ configure(subprojects) {
         dependencies {
             compileOnly("org.projectlombok:lombok:${lombokVersion}")
 
-            // if (!isLib) {
-            //     // Spring boot
-            //     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
-
-            //     // Database
-            //     implementation group: 'org.postgresql', name: 'postgresql', version: "${postgresqlVersion}"
-            // }
-
             // Test
-            // testImplementation 'org.springframework.boot:spring-boot-starter-test'
             testImplementation group: 'org.mockito', name: 'mockito-core', version: "${mockitoVersion}"
-            // testImplementation group: 'com.h2database', name: 'h2', version: "${h2Version}"
             testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
             testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
         }

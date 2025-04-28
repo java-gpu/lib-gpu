@@ -16,7 +16,7 @@
 
 package tech.gpu.lib;
 
-import tech.gpu.lib.util.Disposable;
+import tech.gpu.lib.utils.Disposable;
 
 /**
  * <p>

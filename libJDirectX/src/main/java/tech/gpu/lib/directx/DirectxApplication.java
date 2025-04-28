@@ -1,8 +1,7 @@
 package tech.gpu.lib.directx;
 
 import tech.gpu.lib.*;
-
-import java.awt.datatransfer.Clipboard;
+import tech.gpu.lib.utils.Clipboard;
 
 public class DirectxApplication implements Application {
     @Override
@@ -12,7 +11,7 @@ public class DirectxApplication implements Application {
 
     @Override
     public Graphics getGraphics() {
-        return null;
+        return new DirectxGraphics();
     }
 
     @Override

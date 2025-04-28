@@ -19,7 +19,7 @@ package tech.gpu.lib.audio;
 import tech.gpu.lib.Application;
 import tech.gpu.lib.ApplicationListener;
 import tech.gpu.lib.Audio;
-import tech.gpu.lib.util.Disposable;
+import tech.gpu.lib.utils.Disposable;
 
 import java.io.File;
 

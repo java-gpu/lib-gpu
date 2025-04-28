@@ -1,2 +1,3 @@
 rootProject.name = 'lib-gpu'
 include "libJMetal", "common", "libJVulkan", "libJDirectX"
+//include "game-demo-superjumper"

@@ -220,7 +220,7 @@ public interface Graphics {
 
     /**
      * This is a scaling factor for the Density Independent Pixel unit, following the same conventions as
-     * android.util.DisplayMetrics#density, where one DIP is one pixel on an approximately 160 dpi screen. Thus on a 160dpi screen
+     * android.utils.DisplayMetrics#density, where one DIP is one pixel on an approximately 160 dpi screen. Thus on a 160dpi screen
      * this density value will be 1; on a 120 dpi screen it would be .75; etc.
      * <p>
      * If the density could not be determined, this returns a default value of 1.
@@ -391,7 +391,7 @@ public interface Graphics {
      * @param pixmap   the mouse cursor image as a {@link java.awt.image.BufferedImage}
      * @param xHotspot the x location of the hotspot pixel within the cursor image (origin top-left corner)
      * @param yHotspot the y location of the hotspot pixel within the cursor image (origin top-left corner)
-     * @return a cursor object that can be used by calling {@link #setCursor(Cursor)} or null if not supported
+     * @return a cursor object that can be used by calling {@link #setCursor(Cursor)} or if not supported
      */
     Cursor newCursor(BufferedImage pixmap, int xHotspot, int yHotspot);
 

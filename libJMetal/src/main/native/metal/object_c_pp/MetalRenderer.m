@@ -1,4 +1,4 @@
-#import "tech_gpu_lib_metal_MetalRenderer.h"
+#import "tech_gpu_lib_metal_jni_MetalRenderer.h"
 #import <Metal/Metal.h>
 #import <Foundation/Foundation.h>
 #import <QuartzCore/CAMetalLayer.h>
@@ -50,13 +50,13 @@
 extern "C" {
 #endif
 
-JNIEXPORT jlong JNICALL Java_tech_gpu_lib_metal_MetalRenderer_init
+JNIEXPORT jlong JNICALL Java_tech_gpu_lib_metal_jni_MetalRenderer_init
   (JNIEnv *env, jobject obj, jint gpuIndex) {
     MetalRendererImpl* impl = [[MetalRendererImpl alloc] initWithGPUIndex:gpuIndex];
     return (jlong)CFBridgingRetain(impl);
 }
 
-JNIEXPORT void JNICALL Java_tech_gpu_lib_metal_MetalRenderer_draw
+JNIEXPORT void JNICALL Java_tech_gpu_lib_metal_jni_MetalRenderer_draw
   (JNIEnv *env, jobject obj) {
     jclass cls = (*env)->GetObjectClass(env, obj);
     jfieldID fid = (*env)->GetFieldID(env, cls, "nativeHandle", "J");
@@ -65,7 +65,7 @@ JNIEXPORT void JNICALL Java_tech_gpu_lib_metal_MetalRenderer_draw
     [impl draw];
 }
 
-JNIEXPORT void JNICALL Java_tech_gpu_lib_metal_MetalRenderer_release
+JNIEXPORT void JNICALL Java_tech_gpu_lib_metal_jni_MetalRenderer_release
   (JNIEnv *env, jobject obj) {
     jclass cls = (*env)->GetObjectClass(env, obj);
     jfieldID fid = (*env)->GetFieldID(env, cls, "nativeHandle", "J");

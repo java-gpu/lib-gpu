@@ -20,6 +20,7 @@ import lombok.Getter;
 import lombok.Setter;
 import tech.gpu.lib.Application;
 import tech.gpu.lib.InputProcessor;
+import tech.gpu.lib.math.Vector2;
 
 import java.awt.*;
 import java.util.Timer;
@@ -384,6 +385,10 @@ public class GestureDetector implements InputProcessor {
          */
         public boolean zoom(double initialDistance, double distance);
 
+        default boolean zoom(float initialDistance, float distance) {
+            return false;
+        }
+
         /**
          * Called when a user performs a pinch zoom gesture. Reports the initial positions of the two involved fingers and their
          * current positions.
@@ -393,7 +398,13 @@ public class GestureDetector implements InputProcessor {
          * @param pointer1        pointer1
          * @param pointer2        pointer2
          */
-        public boolean pinch(Point initialPointer1, Point initialPointer2, Point pointer1, Point pointer2);
+        default boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
+            return false;
+        }
+
+        default boolean pinch(Point initialPointer1, Point initialPointer2, Point pointer1, Point pointer2) {
+            return false;
+        }
 
         /**
          * Called when no longer pinching.

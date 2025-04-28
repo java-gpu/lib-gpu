@@ -7,7 +7,6 @@ export javaPackagePath="tech/gpu/lib/metal"
 export srcFolder="src/main/java/${javaPackagePath}"
 
 export listJavaFile=(
-    "${srcFolder}/MetalRenderer.java"
     "${srcFolder}/util/MetalNativeLoader.java"
 )
 
@@ -15,7 +14,7 @@ source ../support-scripts/generateJniHeader.sh "${BUILD_FOLDER}" "${COMMAND}" "$
 
 echo "Executing command ${COMMAND}"
 if [[ "${COMMAND}" = "generateJNIHeaders" ]]; then
-  generateJNIHeaders
+  generateJNIHeaders "src/main/java/tech/gpu/lib/metal/jni"
 elif [[ "${COMMAND}" = "generateNativeBuild" ]]; then
   set -x
   generateNativeBuild "src/main/native/common" "${BUILD_FOLDER}/native/common"
