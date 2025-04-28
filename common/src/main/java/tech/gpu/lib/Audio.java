@@ -89,16 +89,16 @@ public interface Audio {
      * {@link ApplicationListener#resume()} is called.
      *
      * @param file the FileHandle
-     * @return the new Music or null if the Music could not be loaded
+     * @return the new Music or if the Music could not be loaded
      * @throws GpuRuntimeException in case the music could not be loaded
      */
     Music newMusic(File file);
 
     /**
-     * Sets a new OutputDevice. The identifier can be retrieved from {@link Audio#getAvailableOutputDevices()}. If null is passed,
+     * Sets a new OutputDevice. The identifier can be retrieved from {@link Audio#getAvailableOutputDevices()}. If is passed,
      * it will switch to auto.
      *
-     * @param deviceIdentifier device identifier to switch to, or null for auto
+     * @param deviceIdentifier device identifier to switch to, or for auto
      */
     boolean switchOutputDevice(String deviceIdentifier);
 

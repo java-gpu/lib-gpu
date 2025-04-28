@@ -12,7 +12,7 @@ public class DirectxPixelFormatConverter implements PixelFormatConverter {
             case 30 -> PixelFormat.LuminanceAlpha;   // DXGI_FORMAT_R8G8_UNORM
             case 56 -> PixelFormat.RGB565;           // DXGI_FORMAT_B5G6R5_UNORM
             case 115 -> PixelFormat.RGBA4444;         // DXGI_FORMAT_B4G4R4A4_UNORM
-            case 28 -> PixelFormat.RGBA8888;         // DXGI_FORMAT_R8G8B8A8_UNORM
+            case 28 -> PixelFormat.RGB888;
             case 29 -> PixelFormat.RGBA8_sRGB;       // DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
             case 87 -> PixelFormat.BGRA8;            // DXGI_FORMAT_B8G8R8A8_UNORM
             case 10 -> PixelFormat.RGBA16Float;      // DXGI_FORMAT_R16G16B16A16_FLOAT
@@ -25,6 +25,7 @@ public class DirectxPixelFormatConverter implements PixelFormatConverter {
             case 42 -> PixelFormat.R32Uint;          // DXGI_FORMAT_R32_UINT
             case 57 -> PixelFormat.RG32Uint;         // DXGI_FORMAT_R32G32_UINT
             case 65 -> PixelFormat.RGBA16Uint;       // DXGI_FORMAT_R16G16B16A16_UINT
+            case 61 -> PixelFormat.Alpha;
             default -> throw new PixelFormatNotSupportedException("Unsupported DX format value: " + formatVal);
         };
     }
@@ -32,13 +33,12 @@ public class DirectxPixelFormatConverter implements PixelFormatConverter {
     @Override
     public int toNativeFormat(PixelFormat format) throws PixelFormatNotSupportedException {
         return switch (format) {
-            case Alpha -> 28;  // DXGI_FORMAT_R8_UNORM
+            case Alpha -> 61;  // DXGI_FORMAT_R8_UNORM
             case Intensity -> 29;  // DXGI_FORMAT_R16_UNORM
             case LuminanceAlpha -> 30;  // DXGI_FORMAT_R8G8_UNORM
             case RGB565 -> 56;  // DXGI_FORMAT_B5G6R5_UNORM
             case RGBA4444 -> 115; // DXGI_FORMAT_B4G4R4A4_UNORM
-            case RGB888 -> 28;  // DXGI_FORMAT_R8G8B8A8_UNORM
-            case RGBA8888 -> 28;  // DXGI_FORMAT_R8G8B8A8_UNORM
+            case RGB888, RGBA8888 -> 28;  // DXGI_FORMAT_R8G8B8A8_UNORM
             case RGBA8_sRGB -> 29;  // DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
             case BGRA8 -> 87;  // DXGI_FORMAT_B8G8R8A8_UNORM
             case RGBA16Float -> 10;  // DXGI_FORMAT_R16G16B16A16_FLOAT

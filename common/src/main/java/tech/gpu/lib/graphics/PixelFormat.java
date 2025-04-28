@@ -1,6 +1,8 @@
 package tech.gpu.lib.graphics;
 
 import lombok.Getter;
+import tech.gpu.lib.ex.GpuRuntimeException;
+import tech.gpu.lib.graphics.g2d.Gdx2DPixmap;
 
 @Getter
 public enum PixelFormat {
@@ -75,5 +77,34 @@ public enum PixelFormat {
     @Override
     public String toString() {
         return name();
+    }
+
+    public static int toGdx2DPixmapFormat(PixelFormat format) {
+        if (format == Alpha) return Gdx2DPixmap.GDX2D_FORMAT_ALPHA;
+        if (format == Intensity) return Gdx2DPixmap.GDX2D_FORMAT_ALPHA;
+        if (format == LuminanceAlpha) return Gdx2DPixmap.GDX2D_FORMAT_LUMINANCE_ALPHA;
+        if (format == RGB565) return Gdx2DPixmap.GDX2D_FORMAT_RGB565;
+        if (format == RGBA4444) return Gdx2DPixmap.GDX2D_FORMAT_RGBA4444;
+        if (format == RGB888) return Gdx2DPixmap.GDX2D_FORMAT_RGB888;
+        if (format == RGBA8888) return Gdx2DPixmap.GDX2D_FORMAT_RGBA8888;
+        throw new GpuRuntimeException("Unknown Format: " + format);
+    }
+
+    public static PixelFormat fromGdx2DPixmapFormat(int format) {
+        if (format == Gdx2DPixmap.GDX2D_FORMAT_ALPHA) return Alpha;
+        if (format == Gdx2DPixmap.GDX2D_FORMAT_LUMINANCE_ALPHA) return LuminanceAlpha;
+        if (format == Gdx2DPixmap.GDX2D_FORMAT_RGB565) return RGB565;
+        if (format == Gdx2DPixmap.GDX2D_FORMAT_RGBA4444) return RGBA4444;
+        if (format == Gdx2DPixmap.GDX2D_FORMAT_RGB888) return RGB888;
+        if (format == Gdx2DPixmap.GDX2D_FORMAT_RGBA8888) return RGBA8888;
+        throw new GpuRuntimeException("Unknown Gdx2DPixmap Format: " + format);
+    }
+
+    public static int toGlFormat(PixelFormat format) {
+        return Gdx2DPixmap.toGlFormat(toGdx2DPixmapFormat(format));
+    }
+
+    public static int toGlType(PixelFormat format) {
+        return Gdx2DPixmap.toGlType(toGdx2DPixmapFormat(format));
     }
 }

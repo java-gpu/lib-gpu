@@ -16,7 +16,7 @@
 
 package tech.gpu.lib.audio;
 
-import tech.gpu.lib.util.Disposable;
+import tech.gpu.lib.utils.Disposable;
 
 /**
  * Encapsulates an audio device in mono or stereo mode. Use the {@link #writeSamples(float[], int, int)} and

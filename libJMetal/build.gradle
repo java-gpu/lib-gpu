@@ -7,14 +7,12 @@ tasks.register('generateJNIHeaders', Exec) {
     dependsOn classes
     dependsOn project(":common").tasks.named("generateJNIHeaders")
 
-    if (rootProject.ext.isMac || rootProject.ext.isLinux) {
+    if (rootProject.ext.isMac) {
         commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
     } else if (rootProject.ext.isLinux) {
         commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
     } else if (rootProject.ext.isWindows) {
         commandLine "cmd", "/c", 'libJMetalBuild.bat', "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
-    } else {
-        commandLine "echo", "No native build support for ${rootProject.ext.osName}"
     }
 }
 
@@ -23,8 +21,10 @@ tasks.register('generateNativeBuild', Exec) {
     dependsOn generateJNIHeaders
     if (rootProject.ext.isMac) {
         commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild"
-    } else {
-        commandLine "echo", "No native build support for ${rootProject.ext.osName}"
+    } else if (rootProject.ext.isLinux) {
+        commandLine '/bin/bash', "echo", "No native build support for ${rootProject.ext.osName}"
+    } else if (rootProject.ext.isWindows) {
+        commandLine "cmd", "/c", "echo", "No native build support for ${rootProject.ext.osName}"
     }
 }
 
@@ -32,12 +32,23 @@ tasks.register('compileNative', Exec) {
     dependsOn generateNativeBuild
     if (rootProject.ext.isMac) {
         commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative"
-    }else {
-        commandLine "echo", "No native build support for ${rootProject.ext.osName}"
+    } else if (rootProject.ext.isLinux) {
+        commandLine '/bin/bash', "echo", "No native build support for ${rootProject.ext.osName}"
+    } else if (rootProject.ext.isWindows) {
+        commandLine "cmd", "/c", "echo", "No native build support for ${rootProject.ext.osName}"
     }
 }
 
 tasks.build.dependsOn compileNative
+tasks.test.dependsOn compileNative
+
+test {
+    var nativePaths = [
+            "${layout.buildDirectory.asFile.get().absolutePath}/libs/native",
+            "${layout.buildDirectory.asFile.get().absolutePath}/libs"
+    ]
+    systemProperty("java.library.path", nativePaths.join(File.pathSeparator))
+}
 
 // Run Java with native library
 if (rootProject.ext.isMac) {

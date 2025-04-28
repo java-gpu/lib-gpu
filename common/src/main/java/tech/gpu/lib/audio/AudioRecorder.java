@@ -16,7 +16,7 @@
 
 package tech.gpu.lib.audio;
 
-import tech.gpu.lib.util.Disposable;
+import tech.gpu.lib.utils.Disposable;
 
 /**
  * An AudioRecorder allows to record input from an audio device. It has a sampling rate and is either stereo or mono. Samples are

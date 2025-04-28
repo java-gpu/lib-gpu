@@ -18,7 +18,7 @@
 
 package tech.gpu.lib;
 
-import java.awt.datatransfer.Clipboard;
+import tech.gpu.lib.utils.Clipboard;
 
 /**
  * <p>

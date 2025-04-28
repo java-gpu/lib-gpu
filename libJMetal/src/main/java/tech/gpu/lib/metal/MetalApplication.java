@@ -1,8 +1,7 @@
 package tech.gpu.lib.metal;
 
 import tech.gpu.lib.*;
-
-import java.awt.datatransfer.Clipboard;
+import tech.gpu.lib.utils.Clipboard;
 
 public class MetalApplication implements Application {
     @Override

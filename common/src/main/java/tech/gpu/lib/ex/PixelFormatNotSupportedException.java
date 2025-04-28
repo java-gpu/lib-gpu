@@ -1,6 +1,6 @@
 package tech.gpu.lib.ex;
 
-public class PixelFormatNotSupportedException extends Exception {
+public class PixelFormatNotSupportedException extends RuntimeException {
     public PixelFormatNotSupportedException() {
     }
 

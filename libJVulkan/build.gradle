@@ -7,49 +7,36 @@ tasks.register('generateJNIHeaders', Exec) {
     dependsOn classes
     dependsOn project(":common").tasks.named("generateJNIHeaders")
 
-    if (rootProject.ext.isMac || rootProject.ext.isLinux) {
-        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
+    if (rootProject.ext.isMac) {
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJVulkanBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
     } else if (rootProject.ext.isLinux) {
-        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/libJVulkanBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
     } else if (rootProject.ext.isWindows) {
-        commandLine "cmd", "/c", 'libJMetalBuild.bat', "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
-    } else {
-        commandLine "echo", "No native build support for ${rootProject.ext.osName}"
+        commandLine "cmd", "/c", 'libJVulkanBuild.bat', "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}"
     }
 }
 
 // CMake + native build
 tasks.register('generateNativeBuild', Exec) {
     dependsOn generateJNIHeaders
-    if (rootProject.ext.isMac) {
-        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild"
-    } else {
+    if (rootProject.ext.isLinux) {
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/libJVulkanBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild"
+    } else if (rootProject.ext.isMac) {
         commandLine "echo", "No native build support for ${rootProject.ext.osName}"
+    } else if (rootProject.ext.isWindows) {
+        commandLine "cmd", "/c", "echo", "No native build support for ${rootProject.ext.osName}"
     }
 }
 
 tasks.register('compileNative', Exec) {
     dependsOn generateNativeBuild
-    if (rootProject.ext.isMac) {
-        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/libJMetalBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative"
-    }else {
+    if (rootProject.ext.isLinux) {
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/libJVulkanBuild.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative"
+    } else if (rootProject.ext.isMac) {
         commandLine "echo", "No native build support for ${rootProject.ext.osName}"
+    } else if (rootProject.ext.isWindows) {
+        commandLine "cmd", "/c", "echo", "No native build support for ${rootProject.ext.osName}"
     }
 }
 
 tasks.build.dependsOn compileNative
-
-// Run Java with native library
-if (rootProject.ext.isMac) {
-    tasks.register('runApp', JavaExec) {
-        dependsOn build
-        mainClass.set('tech.gpu.lib.metal.MetalWrapper')
-        classpath = sourceSets.main.runtimeClasspath
-        jvmArgs = ["-Djava.library.path=${layout.buildDirectory.asFile.get().absolutePath}/libs/native:${layout.buildDirectory.asFile.get().absolutePath}/libs"]
-    }
-} else {
-    tasks.register('runApp') {
-        dependsOn build
-        println "Run not supported"
-    }
-}

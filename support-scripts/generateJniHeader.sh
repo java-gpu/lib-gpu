@@ -5,24 +5,47 @@ export headerOutputFolder="build/native"
 export lombokGradleCacheFolder="${HOME}/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/${lombokVersion}"
 
 export generateJNIHeaders() {
+    javaSrcFolder="$1"
+    # Use find with -print0 and read null-delimited lines
+    find "${javaSrcFolder}" -name '*.java' -print0 | while IFS= read -r -d '' file; do
+      listJavaFile+=("$file")
+    done
+
     echo "Lombok Version [${lombokVersion}], Cache folder [$lombokGradleCacheFolder]"
     export lombokJarFile=$(find "${lombokGradleCacheFolder}" | grep "$lombokVersion.jar")
     echo "Lombok Jar File [${lombokJarFile}]"
     set -x
-    javac -h "${headerOutputFolder}" "${listJavaFile[@]}" -d "${BUILD_FOLDER}/classes/java/main/${javaPackagePath}" -cp "${lombokJarFile}"
+    javac -h "${headerOutputFolder}" "${listJavaFile[@]}" -d "${BUILD_FOLDER}/tmp_javac/" -cp "${lombokJarFile}" --processor-path "${lombokJarFile}"
+    buildResult=$?
+    set +x
+    if [[ $buildResult -ne 0 ]]; then
+      echo "Error when call generate JNI headers ${buildResult}"
+      exit ${buildResult}
+    else
+      echo "Cleaning folder [${BUILD_FOLDER}/tmp_javac/]"
+      rm -rfv "${BUILD_FOLDER}/tmp_javac/"
+    fi
 }
 
 export generateNativeBuild() {
   nativeSrcFolder="$1"
   nativeOutputFolder="$2"
   if [[ -d "${nativeOutputFolder}" ]]; then
-    rm -rfv "${nativeOutputFolder}"
+    echo "Cleaning folder [${nativeOutputFolder}]..."
+    rm -rf "${nativeOutputFolder}"
   fi
   set -x
   pushd $(pwd)
   cd "${nativeSrcFolder}"
   cmake -B"${nativeOutputFolder}" .
+  buildResult=$?
   popd
+
+  set +x
+  if [[ $buildResult -ne 0 ]]; then
+    echo "Error when call generate native build folder ${buildResult}"
+    exit ${buildResult}
+  fi
 }
 
 export compileNative() {
@@ -31,6 +54,13 @@ export compileNative() {
   pushd $(pwd)
   cd "${generatedFolder}"
   cmake --build .
+  buildResult=$?
   popd
+
+  set +x
+  if [[ $buildResult -ne 0 ]]; then
+    echo "Error when call compile native ${buildResult}"
+    exit ${buildResult}
+  fi
 }
 
