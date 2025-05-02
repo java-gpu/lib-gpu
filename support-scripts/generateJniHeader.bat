@@ -3,6 +3,7 @@
 set BUILD_FOLDER=%1
 set COMMAND=%2
 set lombokVersion=%3
+set jnaVersion=%4
 set headerOutputFolder=build\native
 
 REM Check processor architecture
@@ -23,13 +24,13 @@ setlocal enabledelayedexpansion
 
 echo Executing command %COMMAND%
 if "%COMMAND%" == "generateJNIHeaders" (
-  call :findLombok %4
+  call :findLombok %5
   goto :eof
 ) else if "%COMMAND%" == "generateNativeBuild" (
-  call :generateNativeBuild "%4" "%5"
+  call :generateNativeBuild "%5" "%6"
   goto :eof
 ) else if "%COMMAND%" == "compileNative" (
-  call :compileNative "%4"
+  call :compileNative "%5"
   goto :eof
 )
 goto :eof
@@ -48,12 +49,25 @@ for /R "%lombokGradleCacheFolder%" %%f in (*) do (
     echo %%~nxf | findstr /C:"%lombokVersion%.jar" >nul
     if not errorlevel 1 (
         set "lombokJarFile=%%f"
+        goto :findJna %sourceJniFolder%
+    )
+)
+goto :eof
+
+:findJna
+set sourceJniFolder=%1
+set lombokGradleCacheFolder=%GRADLE_USER_HOME%\caches\modules-2\files-2.1\net.java.dev.jna\jna\%jnaVersion%
+REM Search for the first matching JAR file
+for /R "%lombokGradleCacheFolder%" %%f in (*) do (
+    echo %%~nxf | findstr /C:"%jnaVersion%.jar" >nul
+    if not errorlevel 1 (
+        set "jnaJarFile=%%f"
         goto :foundLombok %sourceJniFolder%
     )
 )
 goto :eof
 
-:foundLombok
+:foundJna
 echo Lombok Jar %lombokJarFile%
 echo on
 
@@ -65,7 +79,7 @@ if exist %sourceJniFolder% (
     )
 )
 
-javac -h "%headerOutputFolder%" %listJavaFile% -d %BUILD_FOLDER%\tmp_javac\ -cp "%lombokJarFile%" --processor-path "%lombokJarFile%"
+javac -h "%headerOutputFolder%" %listJavaFile% -d %BUILD_FOLDER%\tmp_javac\ -cp "%lombokJarFile%:%jnaJarFile%" --processor-path "%lombokJarFile%"
 if exist %BUILD_FOLDER%\tmp_javac\ (
     for /R %BUILD_FOLDER%\tmp_javac %%F in (*) do (
         echo Deleting: %%F

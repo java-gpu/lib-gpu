@@ -1,0 +1,120 @@
+dependencies {
+    implementation("net.java.dev.jna:jna:${jnaVersion}")
+    implementation("net.java.dev.jna:jna-platform:${jnaVersion}")
+}
+
+tasks.register('buildGenie', Exec) {
+    if (rootProject.ext.isMac) {
+        commandLine '/bin/zsh', "${rootProject.ext.externalBuildScript}", "buildGenie"
+    } else if (rootProject.ext.isLinux) {
+        commandLine '/bin/bash', "${rootProject.ext.externalBuildScript}", "buildGenie"
+    } else if (rootProject.ext.isWindows) {
+        commandLine "cmd", "/c", "${rootProject.ext.externalBuildScript}", "buildGenie"
+    }
+
+    // Declare output file for up-to-date checking
+    outputs.file(rootProject.ext.genieExecPath);
+}
+
+tasks.register('cleanGenie', Exec) {
+    mustRunAfter clean
+    if (rootProject.ext.isMac) {
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/../support-scripts/build-bgfx.sh", "cleanGenie"
+    } else if (rootProject.ext.isLinux) {
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/../support-scripts/build-bgfx.sh", "cleanGenie"
+    } else if (rootProject.ext.isWindows) {
+        commandLine "cmd", "/c", "${layout.buildDirectory.asFile.get().absolutePath}/../support-scripts/build-bgfx.bat", "cleanGenie"
+    }
+}
+
+tasks.register('buildBgfx', Exec) {
+    if (rootProject.ext.isMac) {
+        commandLine '/bin/zsh', "${rootProject.ext.externalBuildScript}", "buildBgfx"
+    } else if (rootProject.ext.isLinux) {
+        commandLine '/bin/bash', "${rootProject.ext.externalBuildScript}", "buildBgfx"
+    } else if (rootProject.ext.isWindows) {
+        commandLine "cmd", "/c", "${rootProject.ext.externalBuildScript}", "buildBgfx"
+    }
+}
+
+tasks.register('cleanBgfx', Exec) {
+    if (rootProject.ext.isMac) {
+        commandLine '/bin/zsh', "${rootProject.ext.externalBuildScript}", "cleanBgfx"
+    } else if (rootProject.ext.isLinux) {
+        commandLine '/bin/bash', "${rootProject.ext.externalBuildScript}", "cleanBgfx"
+    } else if (rootProject.ext.isWindows) {
+        commandLine "cmd", "/c", "${rootProject.ext.externalBuildScript}", "cleanBgfx"
+    }
+}
+
+// JNI header generation
+tasks.register('generateJNIHeaders', Exec) {
+    dependsOn classes
+    mustRunAfter classes
+    dependsOn build
+    mustRunAfter build
+    if (rootProject.ext.isMac) {
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}", "${jnaVersion}"
+    } else if (rootProject.ext.isLinux) {
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}", "${jnaVersion}"
+    } else if (rootProject.ext.isWindows) {
+        commandLine "cmd", "/c", "${layout.projectDirectory.asFile.absolutePath}/build.bat", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}", "${jnaVersion}"
+    } else {
+        commandLine "echo", "No native build support for ${rootProject.ext.osName}"
+    }
+}
+
+// CMake + native build
+tasks.register('generateNativeBuild', Exec) {
+    dependsOn generateJNIHeaders
+    mustRunAfter generateJNIHeaders
+    if (rootProject.ext.isMac) {
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild", "${lombokVersion}", "${jnaVersion}"
+    } else if (rootProject.ext.isLinux) {
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild", "${lombokVersion}", "${jnaVersion}"
+    } else if (rootProject.ext.isWindows) {
+        commandLine "cmd", "/c", "${layout.projectDirectory.asFile.absolutePath}/build.bat", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild", "${lombokVersion}", "${jnaVersion}"
+    }
+}
+
+tasks.register('compileNative', Exec) {
+    dependsOn generateNativeBuild
+    mustRunAfter generateNativeBuild
+    if (rootProject.ext.isMac) {
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative", "${lombokVersion}", "${jnaVersion}"
+    } else if (rootProject.ext.isLinux) {
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative", "${lombokVersion}", "${jnaVersion}"
+    } else if (rootProject.ext.isWindows) {
+        commandLine "cmd", "/c", "${layout.buildDirectory.asFile.get().absolutePath}/build.bat", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative", "${lombokVersion}", "${jnaVersion}"
+    }
+}
+
+tasks.build.mustRunAfter buildGenie
+tasks.build.mustRunAfter buildBgfx
+tasks.test.mustRunAfter buildGenie
+tasks.test.mustRunAfter buildBgfx
+
+
+tasks.register('runTest', JavaExec) {
+    dependsOn build
+    mustRunAfter build
+    dependsOn compileNative
+    mustRunAfter compileNative
+    // Detect platform (OS) and architecture (e.g., arm64, x86_64)
+    def platform = System.getProperty('os.name').toLowerCase().contains('mac') ? 'osx' :
+            System.getProperty('os.name').toLowerCase().contains('win') ? 'windows' :
+                    'linux'  // Default for Linux
+
+    def arch = System.getProperty('os.arch') == 'aarch64' ? 'arm64' : 'x86_64'
+
+    // You can print the platform and architecture to verify
+    println "Platform: $platform, Architecture: $arch"
+
+    mainClass.set('tech.lib.bgfx.TestBgfx')
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ["-Djava.library.path=" +
+//                  "${rootProject.layout.projectDirectory.asFile.absolutePath}/native/build/jni" +
+                   ":${layout.buildDirectory.asFile.get().absolutePath}/libs:" +
+                   "${rootProject.layout.projectDirectory.asFile.absolutePath}/external/bgfx/.build/${platform}-${arch}/bin"
+    ]
+}

@@ -1,8 +1,10 @@
 export BUILD_FOLDER="$1"
 export COMMAND="$2"
 export lombokVersion="$3"
+export jnaVersion="$4"
 export headerOutputFolder="build/native"
 export lombokGradleCacheFolder="${HOME}/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/${lombokVersion}"
+export jnaGradleCacheFolder="${HOME}/.gradle/caches/modules-2/files-2.1/net.java.dev.jna/jna/${jnaVersion}"
 
 export generateJNIHeaders() {
     javaSrcFolder="$1"
@@ -14,8 +16,12 @@ export generateJNIHeaders() {
     echo "Lombok Version [${lombokVersion}], Cache folder [$lombokGradleCacheFolder]"
     export lombokJarFile=$(find "${lombokGradleCacheFolder}" | grep "$lombokVersion.jar")
     echo "Lombok Jar File [${lombokJarFile}]"
+    echo "JNA Version [${jnaVersion}], Cache folder [${jnaGradleCacheFolder}]"
+    export jnaJarFile=$(find "${jnaGradleCacheFolder}" | grep "${jnaVersion}.jar")
+    echo "JNA Jar File [${jnaJarFile}]"
+
     set -x
-    javac -h "${headerOutputFolder}" "${listJavaFile[@]}" -d "${BUILD_FOLDER}/tmp_javac/" -cp "${lombokJarFile}" --processor-path "${lombokJarFile}"
+    javac -h "${headerOutputFolder}" "${listJavaFile[@]}" -d "${BUILD_FOLDER}/tmp_javac/" -cp "${lombokJarFile}:${jnaJarFile}" --processor-path "${lombokJarFile}"
     buildResult=$?
     set +x
     if [[ $buildResult -ne 0 ]]; then
@@ -30,13 +36,13 @@ export generateJNIHeaders() {
 export generateNativeBuild() {
   nativeSrcFolder="$1"
   nativeOutputFolder="$2"
-  if [[ -d "${nativeOutputFolder}" ]]; then
-    echo "Cleaning folder [${nativeOutputFolder}]..."
-    rm -rf "${nativeOutputFolder}"
-  fi
   set -x
   pushd $(pwd)
   cd "${nativeSrcFolder}"
+  if [[ -d "${nativeOutputFolder}" ]]; then
+      echo "Cleaning folder [${nativeOutputFolder}]..."
+      rm -rf "${nativeOutputFolder}"
+  fi
   cmake -B"${nativeOutputFolder}" .
   buildResult=$?
   popd
