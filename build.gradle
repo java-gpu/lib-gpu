@@ -1,3 +1,5 @@
+import org.codehaus.groovy.runtime.GStringImpl
+
 /**
  * Define build script dependencies.
  */
@@ -30,7 +32,22 @@ ext {
     isMac = osName.contains("mac")
     isWindows = osName.contains("win")
     isLinux = osName.contains("nux") || osName.contains("nix")
+    externalBuildScript = null
+    genieExecPath = null
 }
+if (ext.isMac || ext.isLinux) {
+    ext.externalBuildScript = "${layout.projectDirectory.asFile.absolutePath}/support-scripts/build-bgfx.sh" as GStringImpl
+    if (ext.isMac) {
+        ext.genieExecPath = layout.projectDirectory.file("external/genie/bin/darwin/genie")
+    } else {
+        ext.genieExecPath = layout.projectDirectory.file("external/genie/bin/linux/genie")
+    }
+} else if (ext.isWindows) {
+    ext.externalBuildScript = "${layout.projectDirectory.asFile.absolutePath}/support-scripts/build-bgfx.bat" as GStringImpl
+    ext.genieExecPath = layout.projectDirectory.file("external/genie/bin/windows/genie")
+}
+println("Build script: ${ext.externalBuildScript}")
+println("Genie script: ${ext.genieExecPath}")
 
 configure(subprojects) {
     buildscript {
@@ -163,6 +180,8 @@ configure(subprojects) {
     afterEvaluate {
         dependencies {
             compileOnly("org.projectlombok:lombok:${lombokVersion}")
+            implementation("org.slf4j:slf4j-api:${slf4jVersion}")
+            implementation("ch.qos.logback:logback-classic:${logbackVersion}")
 
             // Test
             testImplementation group: 'org.mockito', name: 'mockito-core', version: "${mockitoVersion}"
