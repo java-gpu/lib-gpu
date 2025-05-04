@@ -48,6 +48,12 @@ if (ext.isMac || ext.isLinux) {
 }
 println("Build script: ${ext.externalBuildScript}")
 println("Genie script: ${ext.genieExecPath}")
+// Detect platform (OS) and architecture (e.g., arm64, x86_64)
+ext.platform = System.getProperty('os.name').toLowerCase().contains('mac') ? 'osx' :
+        System.getProperty('os.name').toLowerCase().contains('win') ? 'windows' :
+                'linux'  // Default for Linux
+
+ext.arch = System.getProperty('os.arch') == 'aarch64' ? 'arm64' : 'x86_64'
 
 configure(subprojects) {
     buildscript {

@@ -62,7 +62,7 @@ for /R "%lombokGradleCacheFolder%" %%f in (*) do (
     echo %%~nxf | findstr /C:"%jnaVersion%.jar" >nul
     if not errorlevel 1 (
         set "jnaJarFile=%%f"
-        goto :foundLombok %sourceJniFolder%
+        goto :foundJna %sourceJniFolder%
     )
 )
 goto :eof
@@ -79,7 +79,7 @@ if exist %sourceJniFolder% (
     )
 )
 
-javac -h "%headerOutputFolder%" %listJavaFile% -d %BUILD_FOLDER%\tmp_javac\ -cp "%lombokJarFile%:%jnaJarFile%" --processor-path "%lombokJarFile%"
+javac -h "%headerOutputFolder%" %listJavaFile% -d %BUILD_FOLDER%\tmp_javac\ -cp "%lombokJarFile%;%jnaJarFile%" --processor-path "%lombokJarFile%"
 if exist %BUILD_FOLDER%\tmp_javac\ (
     for /R %BUILD_FOLDER%\tmp_javac %%F in (*) do (
         echo Deleting: %%F

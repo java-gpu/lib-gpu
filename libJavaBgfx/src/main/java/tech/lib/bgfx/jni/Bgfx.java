@@ -1,10 +1,14 @@
 package tech.lib.bgfx.jni;
 
+import com.sun.jna.MyJFramePointer;
 import com.sun.jna.Native;
+import com.sun.jna.Pointer;
 import tech.lib.bgfx.util.PlatformInfo;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.ByteBuffer;
+import java.util.Objects;
 
 public class Bgfx {
 
@@ -12,26 +16,114 @@ public class Bgfx {
         JniLoader.loadBgFxJni();
     }
 
-    public static native boolean init(long windowHandlerPointer);
+    /**
+     * Variable definition.
+     */
+    public static final int CLEAR_COLOR = 0x1;
+    public static final int CLEAR_DEPTH = 0x2;
+    public static final int CLEAR_STENCIL = 0x4;
 
+    /**
+     * Init BGFX platform display.
+     *
+     * @param windowHandlerPointer Native window handler pointer.
+     * @return True if success
+     */
+    public static native boolean init(long windowHandlerPointer, Canvas canvas);
+
+    /**
+     * Shut down BGFX.
+     */
     public static native void shutdown();
 
+    /**
+     * Refresh display.
+     */
     public static native void frame();
 
     public static long getNativeHandler(JFrame frame, Canvas canvas) {
         PlatformInfo platformInfo = PlatformInfo.getInstance();
-        switch (platformInfo.getPlatformType()) {
-            case MACOS:
-                return getMacOSNativeHandlerFromCanvas(canvas);
-            case LINUX:
-                // TODO fix later
-                return 0;
-            case WINDOWS:
-                return Native.getComponentPointer(frame).getLong(0);
-            default:
-                return 0;
+        if (Objects.requireNonNull(platformInfo.getPlatformType()) == PlatformInfo.PlatformType.MACOS) {
+            return getMacOSNativeHandlerFromCanvas(canvas);
         }
+        Pointer pointer = Native.getComponentPointer(frame);
+        return new MyJFramePointer(pointer).getPeer();
     }
 
+    /**
+     * MacOS specific code to get native window handler.
+     *
+     * @param canvas AWT canvas.
+     * @return Native window handler pointer.
+     */
     private static native long getMacOSNativeHandlerFromCanvas(Canvas canvas);
+
+    /**
+     * This function sets the resolution and display settings for the backbuffer.
+     *
+     * @param width  Width
+     * @param height Height
+     */
+    public static native void reset(int width, int height);
+
+    /**
+     * Ensures the specified view is cleared even if no draw calls are submitted.
+     * Notes:
+     * <br/>
+     * Prevents leftover frames from being shown if you skip drawing that frame.
+     * <br/>
+     * You usually call this once per view at the start of render().
+     *
+     * @param viewId ViewID
+     */
+    public static native void touch(int viewId);
+
+    /**
+     * Defines the rectangle on screen where rendering will occur for a given view. <br />
+     * <br />
+     * Notes:
+     * <br/>
+     * Usually called at the start of each frame.
+     * <br/>
+     * viewId = 0 is typically the default screen pass.
+     * <br/>
+     *
+     * @param viewId View ID
+     * @param x      x
+     * @param y      y
+     * @param width  Width
+     * @param height Height
+     */
+    public static native void setViewRect(int viewId, int x, int y, int width, int height);
+
+    /**
+     * Allocates buffers and submits a colored quad.
+     *
+     * @param x         x
+     * @param y         y
+     * @param width     Width
+     * @param height    Height
+     * @param abgrColor Alpha + Red + Green + Blue color.
+     */
+    public static native void drawQuad(float x, float y, float width, float height, int abgrColor);
+
+    /**
+     * In rendering, each view in bgfx is a rendering pass (with its own camera, framebuffer, etc).
+     * Before rendering begins for that view, bgfx can automatically clear:
+     *
+     * @param viewId     View ID to clear
+     * @param clearFlags Clear flag
+     * @param rgba       the color buffer (what you see on screen)
+     * @param depth      the depth buffer (used for depth testing).
+     * @param stencil    the stencil buffer (used for masking).
+     */
+    public static native void setViewClear(int viewId, int clearFlags, int rgba, float depth, byte stencil);
+
+    public static native long loadShader(String path);
+
+    public static native long createProgram(long vsHandle, long fsHandle, boolean destroyShaders);
+
+    public static native long createVertexBuffer(ByteBuffer vertexData, long layoutHandle);
+
+    public static native long createIndexBuffer(ByteBuffer indexData);
 }
