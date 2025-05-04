@@ -1,0 +1,46 @@
+# Detect platform
+unameOut="$(uname -s)"
+case "${unameOut}" in
+    Linux*)     PLATFORM=linux;;
+    Darwin*)    PLATFORM=osx;;
+    CYGWIN*|MINGW*|MSYS*)    platform=windows;;
+    *)          PLATFORM="unknown"
+esac
+
+# Detect architecture
+archOut="$(uname -m)"
+case "${archOut}" in
+    arm64|aarch64) ARCH=arm64;;
+    x86_64|amd64)  ARCH=x86_64;;
+    *)             ARCH="unknown"
+esac
+
+echo "Platform: ${PLATFORM}"
+echo "Architecture: ${ARCH}"
+
+export BGFX_FOLDER=../../external/bgfx
+export BX_FOLDER=../../external/bx
+export SHADER_EXEC="${BGFX_FOLDER}/.build/${PLATFORM}-${ARCH}/bin/shadercDebug"
+export SHADER_SRC=shader
+export OUTPUT_FOLDER="${BGFX_FOLDER}/.build/${PLATFORM}-${ARCH}/bin"
+
+set -x
+"${SHADER_EXEC}" -f ${SHADER_SRC}/vs_cubes.sc \
+  -o "${OUTPUT_FOLDER}/vs_cubes.bin" \
+  --type vertex \
+  --platform ${PLATFORM} \
+  -i ${BGFX_FOLDER}/src \
+  -i ${BX_FOLDER}/include \
+  --varyingdef ${SHADER_SRC}/varying.def.sc \
+  -p metal \
+  --verbose
+
+"${SHADER_EXEC}" -f ${SHADER_SRC}/fs_cubes.sc \
+  -o "${OUTPUT_FOLDER}/fs_cubes.bin" \
+  --type vertex \
+  --platform ${PLATFORM} \
+  -i ${BGFX_FOLDER}/src \
+  -i ${BX_FOLDER}/include \
+  --varyingdef ${SHADER_SRC}/varying.def.sc \
+  -p metal \
+  --verbose

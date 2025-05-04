@@ -21,8 +21,14 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64" OR CMAKE_OSX_ARCHITECTURES STREQUAL "
 else()
     set(ARCH "x64")
 endif()
-set(BGFX_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx/.build/${PLATFORM}-${ARCH}/bin)
-# set(BGFX_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
+
+if(PLATFORM STREQUAL "windows")
+    set(BGFX_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin)
+elseif (PLATFORM STREQUAL "linux")
+    set(BGFX_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx/.build/linux64_gcc/bin)
+else()
+    set(BGFX_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx/.build/${PLATFORM}-${ARCH}/bin)
+endif()
 
 # Add bgfx as submodule
 set(BGFX_DIR ${CMAKE_SOURCE_DIR}/../external/bgfx)
@@ -43,7 +49,7 @@ include_directories(
 )
 
 message(STATUS "Using bgfx binary dir: ${BGFX_BIN_DIR}")
-#link_directories(${BGFX_BIN_DIR})
+link_directories(${BGFX_BIN_DIR})
 
 set(SOURCES
     bgfx_jni.cpp
@@ -54,6 +60,10 @@ if(APPLE)
    list(APPEND SOURCES macos/macos_view.mm)
 endif()
 
+if (PLATFORM STREQUAL "linux")
+    list(APPEND SOURCES linux/linux_view.cpp)
+endif()
+
 add_library(bgfx_jni SHARED ${SOURCES})
 
 target_link_directories(bgfx_jni
@@ -61,22 +71,61 @@ target_link_directories(bgfx_jni
     ${BGFX_BIN_DIR}
     ${JAVA_AWT_LIBRARY_DIRECTORIES}
 )
-target_link_libraries(bgfx_jni
-    PRIVATE
-    bgfx-shared-libDebug
-    # bgfx-shared-libRelease
-    # bxRelease
-    bxDebug
-    #bimgRelease
-    bimgDebug
-    jawt
+
+if(PLATFORM STREQUAL "windows")
+    target_compile_options(bgfx_jni PRIVATE /MTd)
+    # Remove default /MDd
+    string(REGEX REPLACE "/MDd" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+    string(REGEX REPLACE "/MDd" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+
+    target_link_libraries(bgfx_jni
+        PRIVATE
+        jawt
+        ${BGFX_BIN_DIR}/bgfx-shared-libDebug.lib
+        ${BGFX_BIN_DIR}/bxDebug.lib
+        ${BGFX_BIN_DIR}/bimgDebug.lib
+        ${BGFX_BIN_DIR}/bgfxDebug.lib
+        # bgfx-shared-libRelease
+        # bxRelease
+        #bxDebug
+        #bimgRelease
+        #bimgDebug
+    )
+else()
+    target_link_libraries(bgfx_jni
+        PRIVATE
+        jawt
+        bgfx-shared-libDebug
+        # bgfx-shared-libRelease
+        # bxRelease
+        bxDebug
+        #bimgRelease
+        bimgDebug
+    )
+endif()
+
+target_include_directories(bgfx_jni PRIVATE
+    ${BGFX_DIR}/include
+    ${BX_DIR}/include
+    ${BIMG_DIR}/include
 )
 
 set_target_properties(bgfx_jni PROPERTIES
     OUTPUT_NAME "bgfx_jni"
     # Set library output directory (relative to CMake's invocation path)
-    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/${PLATFORM}-${ARCH}/bin
-    # LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/jni-output
+    if(PLATFORM STREQUAL "windows")
+        ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
+        ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
+        ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
+    elseif (PLATFORM STREQUAL "linux")
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/linux64_gcc/bin
+    else()
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/${PLATFORM}-${ARCH}/bin
+    endif()
+    
     INSTALL_RPATH "@loader_path"
     # INSTALL_RPATH "@loader_path/../../external/bgfx/.build/${PLATFORM}-${ARCH}/bin"
 )

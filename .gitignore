@@ -31,4 +31,4 @@ replay_pid*
 .gradle/
 /native/*.a
 /native/*.dylib
-
+/**/.vscode

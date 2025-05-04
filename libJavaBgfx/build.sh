@@ -28,6 +28,7 @@ echo "Architecture: ${ARCH}"
 
 export listJavaFile=(
     "${srcFolder}/util/PlatformInfo.java"
+    "src/main/java/com/sun/jna/MyJFramePointer.java"
 )
 
 includeScriptPath=../support-scripts/generateJniHeader.sh
@@ -37,13 +38,17 @@ chmod +x "${includeScriptPath}"
 echo "Executing command ${COMMAND}"
 if [[ "${COMMAND}" = "generateJNIHeaders" ]]; then
   generateJNIHeaders "${srcFolder}/jni"
+  if [[ "${PLATFORM}" = "linux" ]]; then
+    mkdir -p build/native
+    cp -v build/generated/sources/headers/java/main/*.h build/native/
+  fi
 elif [[ "${COMMAND}" = "generateNativeBuild" ]]; then
   set -x
   generateNativeBuild "../native" "${BUILD_FOLDER}/native/build"
 elif [[ "${COMMAND}" = "compileNative" ]]; then
   compileNative "${BUILD_FOLDER}/native/build"
   if [[ "${PLATFORM}" == "osx" ]]; then
-    install_name_tool -change ../../osx-arm64/bin/libbgfx-shared-libRelease.dylib @rpath/libbgfx-shared-libRelease.dylib ../external/bgfx/.build/${PLATFORM}-${ARCH}/bin/libbgfx_jni.dylib
-    install_name_tool -change ../../osx-arm64/bin/libbgfx-shared-libDebug.dylib @rpath/libbgfx-shared-libDebug.dylib ../external/bgfx/.build/${PLATFORM}-${ARCH}/bin/libbgfx_jni.dylib
+    install_name_tool -change ../../${PLATFORM}-${ARCH}/bin/libbgfx-shared-libRelease.dylib @rpath/libbgfx-shared-libRelease.dylib ../external/bgfx/.build/${PLATFORM}-${ARCH}/bin/libbgfx_jni.dylib
+    install_name_tool -change ../../${PLATFORM}-${ARCH}/bin/libbgfx-shared-libDebug.dylib @rpath/libbgfx-shared-libDebug.dylib ../external/bgfx/.build/${PLATFORM}-${ARCH}/bin/libbgfx_jni.dylib
   fi
 fi

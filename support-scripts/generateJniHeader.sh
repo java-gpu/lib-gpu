@@ -6,7 +6,7 @@ export headerOutputFolder="build/native"
 export lombokGradleCacheFolder="${HOME}/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/${lombokVersion}"
 export jnaGradleCacheFolder="${HOME}/.gradle/caches/modules-2/files-2.1/net.java.dev.jna/jna/${jnaVersion}"
 
-export generateJNIHeaders() {
+generateJNIHeaders() {
     javaSrcFolder="$1"
     # Use find with -print0 and read null-delimited lines
     find "${javaSrcFolder}" -name '*.java' -print0 | while IFS= read -r -d '' file; do
@@ -33,7 +33,9 @@ export generateJNIHeaders() {
     fi
 }
 
-export generateNativeBuild() {
+export generateJNIHeaders
+
+generateNativeBuild() {
   nativeSrcFolder="$1"
   nativeOutputFolder="$2"
   set -x
@@ -54,7 +56,9 @@ export generateNativeBuild() {
   fi
 }
 
-export compileNative() {
+export generateNativeBuild
+
+compileNative() {
   generatedFolder="$1"
   set -x
   pushd $(pwd)
@@ -69,4 +73,4 @@ export compileNative() {
     exit ${buildResult}
   fi
 }
-
+export compileNative

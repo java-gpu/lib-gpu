@@ -1,48 +1,40 @@
 package tech.lib.bgfx;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import tech.lib.bgfx.app.AppWindow;
 import tech.lib.bgfx.jni.Bgfx;
 import tech.lib.bgfx.util.JniLogger;
 
-import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 @Slf4j
 public class TestBgfx {
     public static void main(String[] args) throws InterruptedException {
-        Logger logger = LoggerFactory.getLogger(TestBgfx.class);
-        logger.debug("🔍 Library path: {}", System.getProperty("java.library.path"));
+        log.debug("🔍 Library path: {}", System.getProperty("java.library.path"));
 
-        logger.debug("✅ Starting BGFX Test");
+        log.debug("✅ Starting BGFX Test");
 
         var jniLogger = JniLogger.getInstance();
-        JFrame frame = new JFrame();
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1280, 720);
-        Canvas canvas = new Canvas();
-        frame.add(canvas);
 
         try {
-            logger.debug("\uD83D\uDD25 Is JNI logger stopped [{}]", jniLogger.isStopThread());
-            long windowPointer = Bgfx.getNativeHandler(frame, canvas);
-            logger.debug("Windows pointer [{}]", windowPointer);
+            log.debug("\uD83D\uDD25 Is JNI logger stopped [{}]", jniLogger.isStopThread());
+            AppWindow window = new AppWindow(1280, 720, "BGFX Window");
+            log.debug("🟢 bgfx initialized success!");
 
-            boolean initSuccess = Bgfx.init(windowPointer);
-            if (initSuccess) {
-                logger.debug("🟢 bgfx initialized success!");
-
-                for (int i = 0; i < 3; i++) {
-                    Bgfx.frame();
-                    logger.debug("🌀 frame {}", (i + 1));
-                }
-                Bgfx.shutdown();
-                logger.debug("🔴 bgfx shutdown");
-            } else {
-                logger.debug("🔴 bgfx initialized fail!");
+            for (int i = 0; i < 3; i++) {
+                Bgfx.frame();
+                log.debug("🌀 frame {}", (i + 1));
             }
+            window.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    window.dispose();
+                }
+            });
+        } catch (HeadlessException e) {
+            log.debug("🔴 bgfx initialized fail!");
         } finally {
             Thread.sleep(2000);
             jniLogger.setStopThread(true);
