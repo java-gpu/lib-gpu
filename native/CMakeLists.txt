@@ -22,12 +22,12 @@ else()
     set(ARCH "x64")
 endif()
 
-if(PLATFORM STREQUAL "windows")
+if(PLATFORM STREQUAL "osx")
+    set(BGFX_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx/.build/${PLATFORM}-${ARCH}/bin)
+elseif(PLATFORM STREQUAL "windows")
     set(BGFX_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin)
 elseif (PLATFORM STREQUAL "linux")
     set(BGFX_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx/.build/linux64_gcc/bin)
-else()
-    set(BGFX_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../external/bgfx/.build/${PLATFORM}-${ARCH}/bin)
 endif()
 
 # Add bgfx as submodule
@@ -54,14 +54,27 @@ link_directories(${BGFX_BIN_DIR})
 set(SOURCES
     bgfx_jni.cpp
     jni_utils.cpp
+    GpuManager.cpp
 )
 
 if(APPLE)
-   list(APPEND SOURCES macos/macos_view.mm)
+   list(APPEND SOURCES
+       macos/macos_view.mm
+       macos/GpuManager.mm
+   )
 endif()
 
 if (PLATFORM STREQUAL "linux")
-    list(APPEND SOURCES linux/linux_view.cpp)
+    list(APPEND SOURCES
+         linux/linux_view.cpp
+         linux/gpu_manager.cpp
+    )
+endif()
+
+if (PLATFORM STREQUAL "windows")
+    list(APPEND SOURCES
+         windows/gpu_manager.cpp
+    )
 endif()
 
 add_library(bgfx_jni SHARED ${SOURCES})
@@ -110,26 +123,43 @@ target_include_directories(bgfx_jni PRIVATE
     ${BIMG_DIR}/include
 )
 
-set_target_properties(bgfx_jni PROPERTIES
-    OUTPUT_NAME "bgfx_jni"
-    # Set library output directory (relative to CMake's invocation path)
-    if(PLATFORM STREQUAL "windows")
+if(PLATFORM STREQUAL "osx")
+    set_target_properties(bgfx_jni PROPERTIES
+        OUTPUT_NAME "bgfx_jni"
+        # Set library output directory (relative to CMake's invocation path)
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/${PLATFORM}-${ARCH}/bin
+
+        INSTALL_RPATH "@loader_path"
+        # INSTALL_RPATH "@loader_path/../../external/bgfx/.build/${PLATFORM}-${ARCH}/bin"
+    )
+elseif(PLATFORM STREQUAL "windows")
+    set_target_properties(bgfx_jni PROPERTIES
+        OUTPUT_NAME "bgfx_jni"
+        # Set library output directory (relative to CMake's invocation path)
         ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
         ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
         RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
         ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/win64_vs2022/bin
-    elseif (PLATFORM STREQUAL "linux")
+
+        INSTALL_RPATH "@loader_path"
+    )
+elseif (PLATFORM STREQUAL "linux")
+    set_target_properties(bgfx_jni PROPERTIES
+        OUTPUT_NAME "bgfx_jni"
+        # Set library output directory (relative to CMake's invocation path)
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/linux64_gcc/bin
-    else()
-        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../external/bgfx/.build/${PLATFORM}-${ARCH}/bin
-    endif()
-    
-    INSTALL_RPATH "@loader_path"
-    # INSTALL_RPATH "@loader_path/../../external/bgfx/.build/${PLATFORM}-${ARCH}/bin"
-)
+
+        INSTALL_RPATH "@loader_path"
+    )
+endif()
 
 if(APPLE)
-   target_link_libraries(bgfx_jni PRIVATE ${COCOA_LIBRARY})
+   target_link_libraries(bgfx_jni PRIVATE
+       ${COCOA_LIBRARY}
+       "-framework Foundation"
+       "-framework Metal"
+       "-framework AppKit"
+   )
 endif()

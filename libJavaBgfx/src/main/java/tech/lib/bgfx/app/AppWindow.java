@@ -13,9 +13,25 @@ public class AppWindow extends JFrame {
     private final Canvas canvas;
     private final long windowPtr;
     private ShaderHandler shaderHandler;
+    private boolean priority3D;
+    private int gpuIndex;
 
     public AppWindow(int width, int height, String title) {
+        this(width, height, title, false, -1);
+    }
+
+    public AppWindow(int width, int height, String title, boolean priority3D) {
+        this(width, height, title, priority3D, -1);
+    }
+
+    public AppWindow(int width, int height, String title, int gpuIndex) {
+        this(width, height, title, false, gpuIndex);
+    }
+
+    public AppWindow(int width, int height, String title, boolean priority3D, int gpuIndex) {
         super();
+        this.priority3D = priority3D;
+        this.gpuIndex = gpuIndex;
         setSize(width, height);
         setTitle(title);
         setVisible(true);
@@ -28,7 +44,7 @@ public class AppWindow extends JFrame {
     }
 
     private void initialBgfx() {
-        boolean initResult = Bgfx.init(windowPtr, canvas);
+        boolean initResult = Bgfx.init(windowPtr, canvas, priority3D, gpuIndex);
         if (!initResult) {
             throw new HeadlessException("Fail to create AppWindow object!");
         }

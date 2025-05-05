@@ -17,7 +17,7 @@
 
 extern "C" {
 
-    JNIEXPORT jboolean JNICALL Java_tech_lib_bgfx_jni_Bgfx_init(JNIEnv* env, jclass clzz, jlong windowPointer, jobject canvas) {
+    JNIEXPORT jboolean JNICALL Java_tech_lib_bgfx_jni_Bgfx_init(JNIEnv* env, jclass clzz, jlong windowPointer, jobject canvas, jboolean priority3D, jint gpuIndex) {
         try {
 
             bgfx::Init init;
@@ -47,7 +47,11 @@ extern "C" {
                 #ifdef __APPLE__
                     init.type = bgfx::RendererType::Metal;
                 #else
-                    init.type = bgfx::RendererType::Direct3D11;
+                    if (priority3D) {
+                        init.type = bgfx::RendererType::DIRECT3D12;
+                    } else {
+                        init.type = bgfx::RendererType::Direct3D11;
+                    }
                 #endif
             #endif
 
@@ -59,6 +63,10 @@ extern "C" {
             jniLog(env, "DEBUG", "bgfx_jni.cpp", "Starting BGFX initialize...");
 
             init.platformData=pd;
+
+            if (gpuIndex >= 0) {
+                init.deviceId = gpuIndex;
+            }
 
             bool success = bgfx::init(init);
             if (!success) {

@@ -27,9 +27,23 @@ public class Bgfx {
      * Init BGFX platform display.
      *
      * @param windowHandlerPointer Native window handler pointer.
+     * @param canvas               AWT Canvas. Some platform like linux required it to retrieve information.
+     * @param priority3D           Priority to select 3D render type
+     * @param gpuIndex             GPU index
      * @return True if success
      */
-    public static native boolean init(long windowHandlerPointer, Canvas canvas);
+    public static native boolean init(long windowHandlerPointer, Canvas canvas, boolean priority3D, int gpuIndex);
+
+    /**
+     * Init BGFX platform display. Priority to select 2D render type.
+     *
+     * @param windowHandlerPointer Native window handler pointer.
+     * @param canvas               AWT Canvas. Some platform like linux required it to retrieve information.
+     * @return True if success
+     */
+    public static boolean init(long windowHandlerPointer, Canvas canvas, int gpuIndex) {
+        return init(windowHandlerPointer, canvas, false, gpuIndex);
+    }
 
     /**
      * Shut down BGFX.

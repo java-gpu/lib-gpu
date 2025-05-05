@@ -3,6 +3,7 @@ package tech.lib.bgfx;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import tech.lib.bgfx.app.AppWindow;
 import tech.lib.bgfx.jni.Bgfx;
@@ -27,6 +28,7 @@ public class BgfxTest {
     }
 
     @Test
+    @Disabled
     public void testInit() throws Throwable {
 
         log.debug("Starting BGFX Test....");

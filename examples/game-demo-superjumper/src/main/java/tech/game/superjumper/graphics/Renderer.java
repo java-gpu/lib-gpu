@@ -18,7 +18,7 @@ public class Renderer {
 
     private void init() {
         long hwnd = Bgfx.getNativeHandler(frame, canvas);
-        Bgfx.init(hwnd);
+        Bgfx.init(hwnd, canvas, false, -1);
         Bgfx.reset(canvas.getWidth(), canvas.getHeight());
         initialized = true;
     }
