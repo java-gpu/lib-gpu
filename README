@@ -1,1 +1,3 @@
-This project includes code from libgdx under the Apache License 2.0.
+This project develop Java wrapper for bgfx library under the Apache License 2.0.
+We're trying to create Java library can help Java developer to create games using Java programming language.
+Supported platform: Windows, MacOS, Linux with Vulkan.

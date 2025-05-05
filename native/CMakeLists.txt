@@ -55,6 +55,7 @@ set(SOURCES
     bgfx_jni.cpp
     jni_utils.cpp
     GpuManager.cpp
+    bx_timer.cpp
 )
 
 if(APPLE)

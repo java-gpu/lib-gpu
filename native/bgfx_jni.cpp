@@ -173,7 +173,7 @@ extern "C" {
     }
 
     // Load binary shader file and create bgfx shader
-    JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_jni_Bgfx_loadShader (JNIEnv* env, jclass, jstring jpath) {
+    JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_loadShader (JNIEnv* env, jclass, jstring jpath) {
         const char* pathCStr = env->GetStringUTFChars(jpath, nullptr);
         std::string path(pathCStr);
         env->ReleaseStringUTFChars(jpath, pathCStr);
@@ -197,7 +197,7 @@ extern "C" {
         return static_cast<jlong>(handle.idx);
     }
 
-    JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_jni_Bgfx_createProgram(JNIEnv*, jclass, jlong vsHandle, jlong fsHandle, jboolean destroyShaders) {
+    JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_createProgram(JNIEnv*, jclass, jlong vsHandle, jlong fsHandle, jboolean destroyShaders) {
         bgfx::ProgramHandle handle = bgfx::createProgram(
             { static_cast<uint16_t>(vsHandle) },
             { static_cast<uint16_t>(fsHandle) },
@@ -206,7 +206,7 @@ extern "C" {
         return handle.idx;
     }
 
-    JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_jni_Bgfx_createVertexBuffer(JNIEnv* env, jclass, jobject jbuffer, jlong layoutPtr) {
+    JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_createVertexBuffer(JNIEnv* env, jclass, jobject jbuffer, jlong layoutPtr) {
         void* data = env->GetDirectBufferAddress(jbuffer);
         jlong size = env->GetDirectBufferCapacity(jbuffer);
 
@@ -216,12 +216,58 @@ extern "C" {
         return handle.idx;
     }
 
-    JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_jni_Bgfx_createIndexBuffer(JNIEnv* env, jclass, jobject jbuffer) {
+    JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_createIndexBuffer(JNIEnv* env, jclass, jobject jbuffer) {
         void* data = env->GetDirectBufferAddress(jbuffer);
         jlong size = env->GetDirectBufferCapacity(jbuffer);
 
         const bgfx::Memory* mem = bgfx::copy(data, (uint32_t)size);
         bgfx::IndexBufferHandle handle = bgfx::createIndexBuffer(mem);
         return handle.idx;
+    }
+
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setViewTransform(JNIEnv* env, jclass clazz, jint viewId, jfloatArray jView, jfloatArray jProj)
+    {
+        jfloat* view = (*env)->GetFloatArrayElements(env, jView, 0);
+        jfloat* proj = (*env)->GetFloatArrayElements(env, jProj, 0);
+
+        // bgfx_set_view_transform expects 4x4 matrices (16 floats)
+        bgfx_set_view_transform((bgfx_view_id_t)viewId, view, proj);
+
+        (*env)->ReleaseFloatArrayElements(env, jView, view, 0);
+        (*env)->ReleaseFloatArrayElements(env, jProj, proj, 0);
+    }
+
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setTransform(JNIEnv* env, jclass, jfloatArray matrixArray) {
+        jfloat* matrix = env->GetFloatArrayElements(matrixArray, nullptr);
+        bgfx::setTransform(matrix);
+        env->ReleaseFloatArrayElements(matrixArray, matrix, JNI_ABORT);
+    }
+    
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setVertexBuffer(JNIEnv*, jclass, jint stream, jlong vbh) {
+        bgfx::setVertexBuffer((uint8_t)stream, { (uint16_t)vbh });
+    }
+    
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setIndexBuffer(JNIEnv*, jclass, jlong ibh) {
+        bgfx::setIndexBuffer({ (uint16_t)ibh });
+    }
+    
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setState(JNIEnv*, jclass, jlong state) {
+        bgfx::setState((uint64_t)state);
+    }
+    
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_submit(JNIEnv*, jclass, jint viewId, jlong program) {
+        bgfx::submit((uint8_t)viewId, { (uint16_t)program });
+    }
+    
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_destroyVertexBuffer(JNIEnv*, jclass, jlong vbh) {
+        bgfx::destroy(bgfx::VertexBufferHandle{ (uint16_t)vbh });
+    }
+    
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_destroyIndexBuffer(JNIEnv*, jclass, jlong ibh) {
+        bgfx::destroy(bgfx::IndexBufferHandle{ (uint16_t)ibh });
+    }
+    
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_destroyProgram(JNIEnv*, jclass, jlong program) {
+        bgfx::destroy(bgfx::ProgramHandle{ (uint16_t)program });
     }
 }

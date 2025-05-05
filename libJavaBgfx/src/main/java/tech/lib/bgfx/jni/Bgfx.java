@@ -140,4 +140,29 @@ public class Bgfx {
     public static native long createVertexBuffer(ByteBuffer vertexData, long layoutHandle);
 
     public static native long createIndexBuffer(ByteBuffer indexData);
+
+    /**
+     * Setting the camera view and projection for view ID in BGFX, which is a high-performance, cross-platform rendering library.
+     *
+     * @param viewId View ID
+     * @param view   Camera view
+     * @param proj   projection
+     */
+    public static native void setViewTransform(int viewId, float[] view, float[] proj);
+
+    public static native void setTransform(float[] matrix);
+
+    public static native void setVertexBuffer(int stream, long vbh);
+
+    public static native void setIndexBuffer(long ibh);
+
+    public static native void setState(long state);
+
+    public static native void submit(int viewId, long program);
+
+    public static native void destroyVertexBuffer(long vbh);
+
+    public static native void destroyIndexBuffer(long ibh);
+
+    public static native void destroyProgram(long program);
 }

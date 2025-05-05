@@ -1,10 +1,11 @@
 package tech.lib.bgfx.data;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
-public class Vertex {
-    private float x, y, z;
+@Getter
+@Setter
+public class Vertex extends Vec3 {
     private FloatColor color;
 
     public Vertex(float x, float y, float z, float r, float g, float b, float a) {
@@ -16,9 +17,7 @@ public class Vertex {
     }
 
     public Vertex(float x, float y, float z, FloatColor color) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        super(x, y, z);
         this.color = color;
     }
 }
