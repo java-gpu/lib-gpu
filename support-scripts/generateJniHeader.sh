@@ -7,10 +7,18 @@ export lombokGradleCacheFolder="${HOME}/.gradle/caches/modules-2/files-2.1/org.p
 export jnaGradleCacheFolder="${HOME}/.gradle/caches/modules-2/files-2.1/net.java.dev.jna/jna/${jnaVersion}"
 
 generateJNIHeaders() {
-    javaSrcFolder="$1"
+#    javaSrcFolder="$1"
     # Use find with -print0 and read null-delimited lines
-    find "${javaSrcFolder}" -name '*.java' -print0 | while IFS= read -r -d '' file; do
-      listJavaFile+=("$file")
+#    find "${javaSrcFolder}" -name '*.java' -print0 | while IFS= read -r -d '' file; do
+#      listJavaFile+=("$file")
+#    done
+    # Loop through all input directories
+    for javaSrcFolder in "$@"; do
+      if [ -d "$javaSrcFolder" ]; then
+        while IFS= read -r -d '' file; do
+          listJavaFile+=("$file")
+        done < <(find "$javaSrcFolder" -name '*.java' -print0)
+      fi
     done
 
     echo "Lombok Version [${lombokVersion}], Cache folder [$lombokGradleCacheFolder]"

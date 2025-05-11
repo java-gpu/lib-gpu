@@ -1,5 +1,6 @@
 package tech.game.superjumper.graphics;
 
+import tech.lib.bgfx.enu.BgfxResetFlag;
 import tech.lib.bgfx.jni.Bgfx;
 
 import javax.swing.*;
@@ -19,7 +20,7 @@ public class Renderer {
     private void init() {
         long hwnd = Bgfx.getNativeHandler(frame, canvas);
         Bgfx.init(hwnd, canvas, false, -1);
-        Bgfx.reset(canvas.getWidth(), canvas.getHeight());
+        Bgfx.reset(canvas.getWidth(), canvas.getHeight(), BgfxResetFlag.VSYNC);
         initialized = true;
     }
 

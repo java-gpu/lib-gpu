@@ -4,6 +4,8 @@ project(bgfx_java_wrapper)
 # Set output to shared lib
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Tự động phát hiện platform
 if (APPLE)
@@ -11,8 +13,17 @@ if (APPLE)
     find_library(COCOA_LIBRARY Cocoa)
 elseif (WIN32)
     set(PLATFORM "windows")
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "ARM64")
+        message(STATUS "Targeting ARM64")
+        set(DIRECTXTK_LIB_PATH "C:/DirectXTK/Bin/Desktop_2022/ARM64")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64")
+        message(STATUS "Targeting x64")
+        set(DIRECTXTK_LIB_PATH "C:/DirectXTK/Bin/Desktop_2022/x64")
+    endif()
 elseif (UNIX)
     set(PLATFORM "linux")
+    # Find Vulkan
+    find_package(Vulkan REQUIRED)
 endif()
 
 # Tự động phát hiện kiến trúc
@@ -46,6 +57,10 @@ include_directories(
     ${BIMG_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
     ../libJavaBgfx/build/native
+    ../libJavaBgfx/build/generated/sources/headers/java/main
+    if(PLATFORM STREQUAL "windows")
+        C:/DirectXTK/inc
+    endif()
 )
 
 message(STATUS "Using bgfx binary dir: ${BGFX_BIN_DIR}")
@@ -56,12 +71,14 @@ set(SOURCES
     jni_utils.cpp
     GpuManager.cpp
     bx_timer.cpp
+    event_manager_jni.cpp
 )
 
 if(APPLE)
    list(APPEND SOURCES
        macos/macos_view.mm
        macos/GpuManager.mm
+       macos/event_manager.mm
    )
 endif()
 
@@ -69,12 +86,14 @@ if (PLATFORM STREQUAL "linux")
     list(APPEND SOURCES
          linux/linux_view.cpp
          linux/gpu_manager.cpp
+         linux/event_manager.cpp
     )
 endif()
 
 if (PLATFORM STREQUAL "windows")
     list(APPEND SOURCES
          windows/gpu_manager.cpp
+         windows/event_manager.cpp
     )
 endif()
 
@@ -87,7 +106,10 @@ target_link_directories(bgfx_jni
 )
 
 if(PLATFORM STREQUAL "windows")
-    target_compile_options(bgfx_jni PRIVATE /MTd)
+    target_compile_options(bgfx_jni PRIVATE /MTd
+        "$<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>"
+        "$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
+    )
     # Remove default /MDd
     string(REGEX REPLACE "/MDd" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
     string(REGEX REPLACE "/MDd" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
@@ -104,6 +126,22 @@ if(PLATFORM STREQUAL "windows")
         #bxDebug
         #bimgRelease
         #bimgDebug
+        # optimized "${DIRECTXTK_LIB_PATH}/Release/DirectXTK.lib"
+        # debug     "${DIRECTXTK_LIB_PATH}/Debug/DirectXTK.lib"
+        dxgi.lib   # Links to the DXGI library, which contains CreateDXGIFactory1
+        d3d11.lib  # Links to the D3D11 library, in case you need DirectX 11 support
+    )
+elseif(PLATFORM STREQUAL "linux")
+    target_link_libraries(bgfx_jni
+        PRIVATE
+        jawt
+        bgfx-shared-libDebug
+        # bgfx-shared-libRelease
+        # bxRelease
+        bxDebug
+        #bimgRelease
+        bimgDebug
+        ${Vulkan_LIBRARIES}
     )
 else()
     target_link_libraries(bgfx_jni
@@ -164,3 +202,8 @@ if(APPLE)
        "-framework AppKit"
    )
 endif()
+
+target_compile_definitions(bgfx_jni PRIVATE
+    $<$<CONFIG:Debug>:BX_CONFIG_DEBUG=1>
+    $<$<NOT:$<CONFIG:Debug>>:BX_CONFIG_DEBUG=0>
+)

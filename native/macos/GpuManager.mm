@@ -45,6 +45,7 @@ void releaseGpu(JNIEnv* env, void* devicePtr) {
         id<MTLDevice> device = (id<MTLDevice>)devicePtr;
         device = nil;
         // Device will be released automatically when it goes out of scope (ARC).
+        free(devicePtr);
     }
 }
 

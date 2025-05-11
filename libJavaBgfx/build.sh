@@ -29,6 +29,8 @@ echo "Architecture: ${ARCH}"
 export listJavaFile=(
     "${srcFolder}/util/PlatformInfo.java"
     "src/main/java/com/sun/jna/MyJFramePointer.java"
+    "src/main/java/tech/lib/ui/event/UiEvent.java"
+    "src/main/java/tech/lib/ui/enu/UiEventType.java"
 )
 
 includeScriptPath=../support-scripts/generateJniHeader.sh

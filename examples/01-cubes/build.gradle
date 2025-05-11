@@ -1,5 +1,6 @@
 dependencies {
     implementation(project(":libJavaBgfx"))
+    implementation(project(":00-example-common"))
 }
 
 tasks.register('compileShader', Exec) {

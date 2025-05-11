@@ -87,4 +87,5 @@ const char* getGPUNameByPointer(JNIEnv* env, void* devicePtr) {
 void releaseGpu(JNIEnv* env, void* devicePtr) {
     // Vulkan physical devices are not manually released
     (void)devicePtr;
+    free(devicePtr);
 }

@@ -15,6 +15,23 @@
 
 #include "bgfx_jni.h"
 
+/**
+* JNI Type Codes Summary (for quick reference):
+  JNI Code ->	Java Type
+  Z	boolean
+  B	byte
+  C	char
+  S	short
+  I	int
+  J	long
+  F	float
+  D	double
+  V	void
+  L<classname>;	Object (class reference)
+  [<type>	Array (e.g., [I is int[])
+  (Ltech/lib/ui/event/KeyEnum;IZJ)V => input: (Object "tech/lib/ui/event/KeyEnum", int, boolean, long) and return void
+**/
+
 extern "C" {
 
     JNIEXPORT jboolean JNICALL Java_tech_lib_bgfx_jni_Bgfx_init(JNIEnv* env, jclass clzz, jlong windowPointer, jobject canvas, jboolean priority3D, jint gpuIndex) {
@@ -48,7 +65,7 @@ extern "C" {
                     init.type = bgfx::RendererType::Metal;
                 #else
                     if (priority3D) {
-                        init.type = bgfx::RendererType::DIRECT3D12;
+                        init.type = bgfx::RendererType::Direct3D12;
                     } else {
                         init.type = bgfx::RendererType::Direct3D11;
                     }
@@ -115,8 +132,8 @@ extern "C" {
         return 0;
     }
 
-    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_reset(JNIEnv* env, jclass, jint width, jint height) {
-        bgfx::reset(width, height, BGFX_RESET_VSYNC);
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_reset(JNIEnv* env, jclass, jint width, jint height, jint flag) {
+        bgfx::reset(width, height, flag);
     }
 
     JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_touch(JNIEnv* env, jclass, jint viewId) {
@@ -227,14 +244,14 @@ extern "C" {
 
     JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setViewTransform(JNIEnv* env, jclass clazz, jint viewId, jfloatArray jView, jfloatArray jProj)
     {
-        jfloat* view = (*env)->GetFloatArrayElements(env, jView, 0);
-        jfloat* proj = (*env)->GetFloatArrayElements(env, jProj, 0);
+        jfloat* view = env->GetFloatArrayElements(jView, 0);
+        jfloat* proj = env->GetFloatArrayElements(jProj, 0);
 
         // bgfx_set_view_transform expects 4x4 matrices (16 floats)
-        bgfx_set_view_transform((bgfx_view_id_t)viewId, view, proj);
+        bgfx::setViewTransform((uint16_t) viewId, view, proj);
 
-        (*env)->ReleaseFloatArrayElements(env, jView, view, 0);
-        (*env)->ReleaseFloatArrayElements(env, jProj, proj, 0);
+        env->ReleaseFloatArrayElements(jView, view, 0);
+        env->ReleaseFloatArrayElements(jProj, proj, 0);
     }
 
     JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setTransform(JNIEnv* env, jclass, jfloatArray matrixArray) {
@@ -244,11 +261,13 @@ extern "C" {
     }
     
     JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setVertexBuffer(JNIEnv*, jclass, jint stream, jlong vbh) {
-        bgfx::setVertexBuffer((uint8_t)stream, { (uint16_t)vbh });
+        bgfx::VertexBufferHandle handle = { (uint16_t)vbh };
+        bgfx::setVertexBuffer((uint8_t)stream, handle);
     }
     
     JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setIndexBuffer(JNIEnv*, jclass, jlong ibh) {
-        bgfx::setIndexBuffer({ (uint16_t)ibh });
+        bgfx::IndexBufferHandle handle = { (uint16_t)ibh };
+        bgfx::setIndexBuffer(handle);
     }
     
     JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setState(JNIEnv*, jclass, jlong state) {

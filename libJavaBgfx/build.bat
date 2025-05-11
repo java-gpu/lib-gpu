@@ -13,6 +13,8 @@ setlocal enabledelayedexpansion
 :: Simulate an array
 set "listJavaFile=%srcFolder%\util\PlatformInfo.java"
 set "listJavaFile=%listJavaFile% src\main\java\com\sun\jna\MyJFramePointer.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\ui\event\UiEvent.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\ui\enu\UiEventType.java"
 
 echo "Executing command %COMMAND%"
 if "%COMMAND%" == "generateJNIHeaders" (
