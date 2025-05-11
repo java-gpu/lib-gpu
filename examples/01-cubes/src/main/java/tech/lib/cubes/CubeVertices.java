@@ -1,7 +1,7 @@
 package tech.lib.cubes;
 
-import tech.lib.bgfx.app.BgfxStateFlag;
 import tech.lib.bgfx.data.Vertex;
+import tech.lib.bgfx.enu.BgfxStateFlag;
 
 public class CubeVertices {
     public static Vertex[] vertices = new Vertex[]{

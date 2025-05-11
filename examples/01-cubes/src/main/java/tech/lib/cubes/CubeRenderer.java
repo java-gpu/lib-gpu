@@ -1,9 +1,10 @@
 package tech.lib.cubes;
 
+import imgui.ImGui;
 import tech.lib.bgfx.app.AppWindow;
-import tech.lib.bgfx.app.BgfxStateFlag;
 import tech.lib.bgfx.data.Mat4;
 import tech.lib.bgfx.data.Vec3;
+import tech.lib.bgfx.enu.BgfxStateFlag;
 import tech.lib.bgfx.jni.Bgfx;
 import tech.lib.bgfx.jni.BxTimer;
 import tech.lib.bgfx.jni.VertexLayout;
@@ -33,6 +34,7 @@ public class CubeRenderer {
                 Bgfx.createIndexBuffer(vertexUtil.convertFloatToByteBuffer(CubeVertices.points))
         };
         timeOffset = BxTimer.getHPCounter();
+        ImGui.createContext();
     }
 
     public void renderFrame(float time) {
@@ -47,16 +49,20 @@ public class CubeRenderer {
         Bgfx.setTransform(model);
 
         Bgfx.setVertexBuffer(0, vbh);
-        Bgfx.setIndexBuffer(ibh);
+//        Bgfx.setIndexBuffer(ibh);
         Bgfx.setState(BgfxStateFlag.DEFAULT.getValue());
         Bgfx.submit(0, window.getShaderHandler().getProgram());
         Bgfx.frame();
     }
 
     public void shutdown() {
+        ImGui.destroyContext();
+        for (long ibh : ibhs) {
+            Bgfx.destroyIndexBuffer(ibh);
+        }
         Bgfx.destroyVertexBuffer(vbh);
-        Bgfx.destroyIndexBuffer(ibh);
         Bgfx.destroyProgram(window.getShaderHandler().getProgram());
-//        Bgfx.shutdown();
+        // Shutdown bgfx.
+        Bgfx.shutdown();
     }
 }

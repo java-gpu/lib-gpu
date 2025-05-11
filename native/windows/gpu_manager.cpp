@@ -79,6 +79,18 @@ const char* getGPUNameByPointer(JNIEnv* env, void* devicePtr) {
 }
 
 void releaseGpu(JNIEnv* env, void* devicePtr) {
+    if (!devicePtr) return;  // Add a null pointer check
+
     IDXGIAdapter1* adapter = reinterpret_cast<IDXGIAdapter1*>(devicePtr);
-    if (adapter) adapter->Release();
+    if (adapter) {
+//        try{
+//            adapter->Release();
+//        } catch (const std::exception& e) {
+//            env->ThrowNew(env->FindClass("tech/lib/bgfx/ex/JniRuntimeException"), e.what());
+//            return;
+//        } catch (...) {
+//            env->ThrowNew(env->FindClass("tech/lib/bgfx/ex/JniRuntimeException"), "Unknown native exception");
+//            return;
+//        }
+    }
 }

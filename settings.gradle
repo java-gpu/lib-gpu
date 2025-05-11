@@ -6,3 +6,6 @@ include "libJavaBgfx", "game-demo-superjumper"
 include '01-cubes'
 project(':01-cubes').projectDir = file('examples/01-cubes')
 project(':game-demo-superjumper').projectDir = file('examples/game-demo-superjumper')
+
+include '00-example-common'
+project(':00-example-common').projectDir = file('examples/00-example-common')

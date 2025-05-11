@@ -71,11 +71,12 @@ goto :eof
 echo Lombok Jar %lombokJarFile%
 echo on
 
-rem Collect all .java files recursively into a variable
-set sourceJniFolder=%1
-if exist %sourceJniFolder% (
-    for /R %sourceJniFolder% %%f in (*.java) do (
-        set listJavaFile=!listJavaFile! "%%f"
+rem Loop through all input arguments (directories)
+for %%d in (%*) do (
+    if exist "%%~d" (
+        for /R "%%~d" %%f in (*.java) do (
+            set listJavaFile=!listJavaFile! "%%f"
+        )
     )
 )
 

@@ -3,6 +3,7 @@ package tech.lib.bgfx.jni;
 import com.sun.jna.MyJFramePointer;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+import tech.lib.bgfx.enu.BgfxResetFlag;
 import tech.lib.bgfx.util.PlatformInfo;
 
 import javax.swing.*;
@@ -78,7 +79,17 @@ public class Bgfx {
      * @param width  Width
      * @param height Height
      */
-    public static native void reset(int width, int height);
+    public static void reset(int width, int height, BgfxResetFlag resetFlag) {
+        reset(width, height, resetFlag.getValue());
+    }
+
+    /**
+     * This function sets the resolution and display settings for the backbuffer.
+     *
+     * @param width  Width
+     * @param height Height
+     */
+    public static native void reset(int width, int height, int resetFlag);
 
     /**
      * Ensures the specified view is cleared even if no draw calls are submitted.

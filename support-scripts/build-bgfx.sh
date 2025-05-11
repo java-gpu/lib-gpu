@@ -22,7 +22,7 @@ elif [[ "${COMMAND}" = "buildBgfx" ]]; then
   if [[ "$OS_TYPE" == "Darwin" ]]; then
       echo "This is macOS"
       # executeCommandInDir "make osx-arm64-release" "../external/bgfx"
-      # executeCommandInDir "make osx-arm64-debug" "../external/bgfx"
+      executeCommandInDir "make osx-arm64-debug" "../external/bgfx"
   elif [[ "$OS_TYPE" == "Linux" ]]; then
       echo "This is Linux"
       # executeCommandInDir "make linux-gcc-release64" "../external/bgfx"

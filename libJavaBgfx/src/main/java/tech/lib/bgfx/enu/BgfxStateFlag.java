@@ -1,4 +1,4 @@
-package tech.lib.bgfx.app;
+package tech.lib.bgfx.enu;
 
 import lombok.Getter;
 

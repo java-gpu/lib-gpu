@@ -1,6 +1,15 @@
 dependencies {
     api("net.java.dev.jna:jna:${jnaVersion}")
     api("net.java.dev.jna:jna-platform:${jnaVersion}")
+    api "io.github.spair:imgui-java-binding:${imguiJavaVersion}"
+    // api "io.github.spair:imgui-java-lwjgl3:${imguiJavaVersion}"
+    if (rootProject.ext.isMac) {
+        api "io.github.spair:imgui-java-natives-macos:${imguiJavaVersion}"
+    } else if (rootProject.ext.isLinux) {
+        api "io.github.spair:imgui-java-natives-linux:${imguiJavaVersion}"
+    } else if (rootProject.ext.isWindows) {
+        api "io.github.spair:imgui-java-natives-windows:${imguiJavaVersion}"
+    }
 }
 
 tasks.register('buildBgfx', Exec) {
