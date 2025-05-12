@@ -11,6 +11,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (APPLE)
     set(PLATFORM "osx")
     find_library(COCOA_LIBRARY Cocoa)
+    find_library(IOKIT_LIBRARY IOKit)
+    find_library(COREFOUNDATION_LIBRARY CoreFoundation)
 elseif (WIN32)
     set(PLATFORM "windows")
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "ARM64")
@@ -24,6 +26,9 @@ elseif (UNIX)
     set(PLATFORM "linux")
     # Find Vulkan
     find_package(Vulkan REQUIRED)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(DBUS REQUIRED dbus-1)
+    pkg_check_modules(LIBEVDEV REQUIRED libevdev)
 endif()
 
 # Tự động phát hiện kiến trúc
@@ -57,9 +62,13 @@ include_directories(
     ${BIMG_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
     ../libJavaBgfx/build/native
-    ../libJavaBgfx/build/generated/sources/headers/java/main
+    # ../libJavaBgfx/build/generated/sources/headers/java/main
     if(PLATFORM STREQUAL "windows")
         C:/DirectXTK/inc
+    endif()
+    if(PLATFORM STREQUAL "linux")
+        ${DBUS_INCLUDE_DIRS}
+        ${LIBEVDEV_INCLUDE_DIRS}
     endif()
 )
 
@@ -72,6 +81,7 @@ set(SOURCES
     GpuManager.cpp
     bx_timer.cpp
     event_manager_jni.cpp
+    game_pad_event.cpp
 )
 
 if(APPLE)
@@ -79,6 +89,7 @@ if(APPLE)
        macos/macos_view.mm
        macos/GpuManager.mm
        macos/event_manager.mm
+       macos/event_manager.cpp
    )
 endif()
 
@@ -142,6 +153,8 @@ elseif(PLATFORM STREQUAL "linux")
         #bimgRelease
         bimgDebug
         ${Vulkan_LIBRARIES}
+        ${DBUS_LIBRARIES}
+        ${LIBEVDEV_LIBRARIES}
     )
 else()
     target_link_libraries(bgfx_jni
@@ -153,6 +166,8 @@ else()
         bxDebug
         #bimgRelease
         bimgDebug
+        ${IOKIT_LIBRARY}
+        ${COREFOUNDATION_LIBRARY}
     )
 endif()
 

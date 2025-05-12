@@ -4,8 +4,8 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import tech.lib.bgfx.enu.AppConst;
 import tech.lib.ui.data.Gamepad;
-import tech.lib.ui.enu.KeyEnum;
 
+import java.awt.event.KeyEvent;
 import java.util.Map;
 
 @Data
@@ -42,20 +42,21 @@ public class Input {
     public void process(InputBinding<?> _bindings) {
         for (Map.Entry<String, InputBinding<?>> entry : inputBindingsMap.entrySet()) {
             InputBinding<?> binding = entry.getValue();
-            if (binding.getKey() != KeyEnum.Home) {
-
-                InputKeyboard.KeyState keyState = InputKeyboard.decodeKeyState(keyboardInput.getKeys().get(binding.getKey()).getEncoded());
+            var keyEvent = binding.getKey();
+            var keyCode = keyEvent.getKeyCode();
+            if (keyCode != KeyEvent.VK_HOME) {
+                InputKeyboard.KeyState keyState = InputKeyboard.decodeKeyState(keyboardInput.getKeys().get(keyCode).getEncoded());
                 int modifiers = keyState.getModifier();
                 boolean down = keyState.isDown();
 
                 if (binding.getFlags() == 1) {
                     if (down) {
-                        if (modifiers == binding.getModifiers().getValue() && !keyboardInput.getOnce().get(binding.getKey())) {
+                        if (modifiers == binding.getModifiers().getValue() && !keyboardInput.getOnce().get(keyCode)) {
                             executeBinding(binding);
-                            keyboardInput.getOnce().put(binding.getKey(), true);
+                            keyboardInput.getOnce().put(keyCode, true);
                         }
                     } else {
-                        keyboardInput.getOnce().put(binding.getKey(), false);
+                        keyboardInput.getOnce().put(keyCode, false);
                     }
                 } else {
                     if (down && modifiers == binding.getModifiers().getValue()) {

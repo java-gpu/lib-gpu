@@ -2,7 +2,6 @@ package tech.lib.ui.input;
 
 import lombok.Data;
 import tech.lib.bgfx.enu.AppConst;
-import tech.lib.ui.enu.MouseButton;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +11,7 @@ public class InputMouse {
     private int[] absolutes;
     private float[] norms;
     private int wheel;
-    private Map<MouseButton, Integer> buttons;
+    private Map<Integer, Integer> buttons;
     private int width;
     private int height;
     private int wheelDelta;
@@ -30,9 +29,6 @@ public class InputMouse {
     public void reset() {
         norms = new float[]{0, 0, 0};
         buttons = new HashMap<>();
-        for (MouseButton button : MouseButton.values()) {
-            buttons.put(button, 0);
-        }
     }
 
     public void setResolution(int width, int height) {
@@ -49,7 +45,7 @@ public class InputMouse {
         norms[2] = (float) (_mz / wheelDelta);
     }
 
-    public void setButtonState(MouseButton button, int _state) {
+    public void setButtonState(int button, int _state) {
         buttons.put(button, _state);
     }
 }

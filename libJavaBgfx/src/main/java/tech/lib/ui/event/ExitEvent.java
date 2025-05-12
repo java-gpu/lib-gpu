@@ -3,18 +3,32 @@ package tech.lib.ui.event;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import tech.lib.ui.enu.UiEventType;
+import tech.lib.ui.enu.AppEventType;
 
 @Setter
 @Getter
 @ToString(callSuper = true)
-public class ExitEvent extends UiEvent {
+public class ExitEvent implements AppEvent {
 
-    public ExitEvent(long windowHandler) {
-        super(UiEventType.Exit, windowHandler);
+    private long windowHandler;
+    private Object eventData;
+
+    public ExitEvent(long windowHandler, Object data) {
+        this.windowHandler = windowHandler;
+        this.eventData = data;
     }
 
-    public ExitEvent() {
-        super(UiEventType.Exit);
+    public ExitEvent(long windowHandler) {
+        this(windowHandler, null);
+    }
+
+    @Override
+    public AppEvent clone() {
+        return new ExitEvent(windowHandler, eventData);
+    }
+
+    @Override
+    public AppEventType getEventType() {
+        return AppEventType.Exit;
     }
 }

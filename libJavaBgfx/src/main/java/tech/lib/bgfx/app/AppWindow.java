@@ -1,11 +1,13 @@
 package tech.lib.bgfx.app;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import tech.lib.bgfx.jni.Bgfx;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.dnd.DropTarget;
 
 @Slf4j
 @Getter
@@ -15,6 +17,8 @@ public class AppWindow extends JFrame {
     private ShaderHandler shaderHandler;
     private boolean priority3D;
     private int gpuIndex;
+    @Setter
+    private DropTarget dropTarget;
 
     public AppWindow(int width, int height, String title) {
         this(width, height, title, false, -1);

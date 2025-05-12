@@ -5,8 +5,8 @@ import tech.lib.bgfx.enu.AppConst;
 import tech.lib.bgfx.enu.BgfxDebugFlag;
 import tech.lib.bgfx.enu.BgfxResetFlag;
 import tech.lib.bgfx.jni.Bgfx;
-import tech.lib.ui.data.MouseState;
-import tech.lib.ui.event.UiEvent;
+import tech.lib.ui.event.AppEvent;
+import tech.lib.ui.event.CustomMouseEvent;
 import tech.lib.ui.input.Input;
 import tech.lib.ui.jni.EventManager;
 
@@ -38,7 +38,7 @@ public class Entry {
 //
 //    typedef bx::StringT<&g_allocator> String;
 
-    public boolean processEvents(int width, int height, BgfxDebugFlag _debug, BgfxResetFlag _reset, MouseState mouseState) {
+    public boolean processEvents(int width, int height, BgfxDebugFlag _debug, BgfxResetFlag _reset, CustomMouseEvent mouseState) {
         boolean needReset = s_reset != _reset;
 
         debug = _debug;
@@ -46,7 +46,7 @@ public class Entry {
 
         // TODO
         boolean mouseLock = input.inputIsMouseLocked();
-        UiEvent ev = null;
+        AppEvent ev = null;
         do {
             ev = EventManager.pollUiEvent(input.getWindowHandler());
 //
