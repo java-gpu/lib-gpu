@@ -4,7 +4,6 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import tech.lib.bgfx.util.StringUtils;
 import tech.lib.ui.data.RingBufferControl;
-import tech.lib.ui.enu.KeyEnum;
 import tech.lib.ui.ex.UiProcessingException;
 
 import java.nio.charset.StandardCharsets;
@@ -16,8 +15,8 @@ import java.util.Map;
 public class InputKeyboard {
     private static final int NUMBER_OF_BYTE_PER_CHAR = 4;
     private static final int DEFAULT_RING_SIZE = 256;
-    private Map<KeyEnum, KeyState> keys;
-    private Map<KeyEnum, Boolean> once;
+    private Map<Integer, KeyState> keys;
+    private Map<Integer, Boolean> once;
 
     private RingBufferControl ring;
 
@@ -29,10 +28,6 @@ public class InputKeyboard {
     public void reset() {
         keys = new HashMap<>();
         once = new HashMap<>();
-        for (KeyEnum key : KeyEnum.values()) {
-            keys.put(key, decodeKeyState(0));
-            once.put(key, false);
-        }
     }
 
     /**
@@ -81,21 +76,18 @@ public class InputKeyboard {
         return new KeyState(_modifiers, result, state);
     }
 
-    public void setKeyState(KeyEnum _key, int _modifiers, boolean _down) {
+    public void setKeyState(int _key, int _modifiers, boolean _down) {
         keys.put(_key, encodeKeyState(_modifiers, _down));
         once.put(_key, false);
     }
 
-    public KeyState getKeyState(KeyEnum _key) {
-        return decodeKeyState(keys.get(_key).encoded);
-    }
-
-    public int getModifiersState() {
-        int modifiers = 0;
-        for (KeyEnum key : KeyEnum.values()) {
-            modifiers |= (int) ((keys.get(key).encoded >> 16) & 0xff);
+    public KeyState getKeyState(int _key) {
+        var keyState = keys.get(_key);
+        if (keyState == null) {
+            keyState = new KeyState(_key, false);
+            keys.put(_key, keyState);
         }
-        return modifiers;
+        return decodeKeyState(keyState.encoded);
     }
 
     public void pushChar(int _len, char _char) {

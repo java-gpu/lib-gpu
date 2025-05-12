@@ -2,6 +2,7 @@ export BUILD_FOLDER="$1"
 export COMMAND="$2"
 export lombokVersion="$3"
 export jnaVersion="$4"
+export slf4jVersion="$5"
 export javaPackagePath="tech/lib/bgfx"
 export srcFolder="src/main/java/${javaPackagePath}"
 export headerOutputFolder="build/native"
@@ -29,17 +30,21 @@ echo "Architecture: ${ARCH}"
 export listJavaFile=(
     "${srcFolder}/util/PlatformInfo.java"
     "src/main/java/com/sun/jna/MyJFramePointer.java"
-    "src/main/java/tech/lib/ui/event/UiEvent.java"
-    "src/main/java/tech/lib/ui/enu/UiEventType.java"
+    "src/main/java/tech/lib/ui/event/AppEvent.java"
+    "src/main/java/tech/lib/ui/enu/AppEventType.java"
+    "src/main/java/tech/lib/ui/enu/SuspendState.java"
+    "src/main/java/tech/lib/bgfx/enu/BgfxResetFlag.java"
+    "src/main/java/tech/lib/ui/enu/GamepadAxis.java"
+    "src/main/java/tech/lib/ui/event/SuspendEvent.java"
 )
 
 includeScriptPath=../support-scripts/generateJniHeader.sh
 chmod +x "${includeScriptPath}"
-. "${includeScriptPath}" "${BUILD_FOLDER}" "${COMMAND}" "${lombokVersion}" "${jnaVersion}"
+. "${includeScriptPath}" "${BUILD_FOLDER}" "${COMMAND}" "${lombokVersion}" "${jnaVersion}" "${slf4jVersion}"
 
 echo "Executing command ${COMMAND}"
 if [[ "${COMMAND}" = "generateJNIHeaders" ]]; then
-  generateJNIHeaders "${srcFolder}/jni"
+  generateJNIHeaders "${srcFolder}/jni" "src/main/java/tech/lib/ui/jni"
   if [[ "${PLATFORM}" = "linux" ]]; then
     mkdir -p build/native
     cp -v build/generated/sources/headers/java/main/*.h build/native/

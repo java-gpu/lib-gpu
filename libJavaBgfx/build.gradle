@@ -37,11 +37,11 @@ tasks.register('generateJNIHeaders', Exec) {
     dependsOn classes
     mustRunAfter classes
     if (rootProject.ext.isMac) {
-        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}", "${jnaVersion}"
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}", "${jnaVersion}", "${slf4jVersion}"
     } else if (rootProject.ext.isLinux) {
-        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}", "${jnaVersion}"
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}", "${jnaVersion}", "${slf4jVersion}"
     } else if (rootProject.ext.isWindows) {
-        commandLine "cmd", "/c", "${layout.projectDirectory.asFile.absolutePath}\\build.bat", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}", "${jnaVersion}"
+        commandLine "cmd", "/c", "${layout.projectDirectory.asFile.absolutePath}\\build.bat", "${layout.buildDirectory.asFile.get().absolutePath}", "generateJNIHeaders", "${lombokVersion}", "${jnaVersion}", "${slf4jVersion}"
     } else {
         commandLine "echo", "No native build support for ${rootProject.ext.osName}"
     }
@@ -52,11 +52,11 @@ tasks.register('generateNativeBuild', Exec) {
     dependsOn generateJNIHeaders
     mustRunAfter generateJNIHeaders
     if (rootProject.ext.isMac) {
-        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild", "${lombokVersion}", "${jnaVersion}"
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild", "${lombokVersion}", "${jnaVersion}", "${slf4jVersion}"
     } else if (rootProject.ext.isLinux) {
-        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild", "${lombokVersion}", "${jnaVersion}"
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild", "${lombokVersion}", "${jnaVersion}", "${slf4jVersion}"
     } else if (rootProject.ext.isWindows) {
-        commandLine "cmd", "/c", "${layout.projectDirectory.asFile.absolutePath}\\build.bat", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild", "${lombokVersion}", "${jnaVersion}"
+        commandLine "cmd", "/c", "${layout.projectDirectory.asFile.absolutePath}\\build.bat", "${layout.buildDirectory.asFile.get().absolutePath}", "generateNativeBuild", "${lombokVersion}", "${jnaVersion}", "${slf4jVersion}"
     }
 }
 
@@ -64,11 +64,11 @@ tasks.register('compileNative', Exec) {
     dependsOn generateNativeBuild
     mustRunAfter generateNativeBuild
     if (rootProject.ext.isMac) {
-        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative", "${lombokVersion}", "${jnaVersion}"
+        commandLine '/bin/zsh', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative", "${lombokVersion}", "${jnaVersion}", "${slf4jVersion}"
     } else if (rootProject.ext.isLinux) {
-        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative", "${lombokVersion}", "${jnaVersion}"
+        commandLine '/bin/bash', "${layout.projectDirectory.asFile.absolutePath}/build.sh", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative", "${lombokVersion}", "${jnaVersion}", "${slf4jVersion}"
     } else if (rootProject.ext.isWindows) {
-        commandLine "cmd", "/c", "${layout.projectDirectory.asFile.absolutePath}\\build.bat", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative", "${lombokVersion}", "${jnaVersion}"
+        commandLine "cmd", "/c", "${layout.projectDirectory.asFile.absolutePath}\\build.bat", "${layout.buildDirectory.asFile.get().absolutePath}", "compileNative", "${lombokVersion}", "${jnaVersion}", "${slf4jVersion}"
     }
 }
 

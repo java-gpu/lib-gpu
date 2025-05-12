@@ -1,6 +1,6 @@
 package tech.lib.ui.enu;
 
-public enum UiEventType {
+public enum AppEventType {
     Axis,
     Char,
     Exit,
@@ -10,5 +10,7 @@ public enum UiEventType {
     Size,
     Window,
     Suspend,
-    DropFile
+    DropFile,
+    Focus,
+    MouseWheel
 }

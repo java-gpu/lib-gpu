@@ -2,18 +2,61 @@ package tech.lib.ui.jni;
 
 import tech.lib.bgfx.jni.JniLoader;
 import tech.lib.ui.enu.GamepadAxis;
-import tech.lib.ui.enu.KeyEnum;
-import tech.lib.ui.enu.MouseButton;
 import tech.lib.ui.enu.SuspendState;
-import tech.lib.ui.event.UiEvent;
+import tech.lib.ui.event.AppEvent;
+import tech.lib.ui.event.SuspendEvent;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class EventManager {
+
+    private static final Map<Long, SystemEventQueue> systemEventQueueMap = new HashMap<>();
+    private static final Set<Long> windowRegisteredForSuspendEvent = new HashSet<>();
+    private static boolean pollingGamePad = false;
+    private static final Set<Long> windowRegisteredForGamepadEvent = new HashSet<>();
 
     static {
         JniLoader.loadBgFxJni();
     }
 
-    public native static UiEvent pollUiEvent(long windowHandler);
+    public static SystemEventQueue getWindowEventQueue(long windowHandler) {
+        if (!systemEventQueueMap.containsKey(windowHandler)) {
+            var eventQueue = new SystemEventQueue();
+            systemEventQueueMap.put(windowHandler, eventQueue);
+            return eventQueue;
+        }
+        return systemEventQueueMap.get(windowHandler);
+    }
+
+    public static AppEvent pollUiEvent(long windowHandler) {
+        return getWindowEventQueue(windowHandler).pollEvent();
+    }
+
+    public static SystemEventQueue removeWindowEventQueue(long windowHandler) {
+        return systemEventQueueMap.remove(windowHandler);
+    }
+
+    public static void pushUiEvent(long windowHandler, AppEvent appEvent) {
+        getWindowEventQueue(windowHandler).addLast(appEvent);
+    }
+
+    public static void pushUiEvent(AppEvent appEvent) {
+        pushUiEvent(appEvent.getWindowHandler(), appEvent);
+    }
+
+    /**
+     * This method will be called from JNI.
+     *
+     * @param state SuspendState
+     */
+    public static void pushSuspendState(SuspendState state) {
+        for (Long windowHandler : windowRegisteredForSuspendEvent) {
+            getWindowEventQueue(windowHandler).addLast(new SuspendEvent(state, windowHandler));
+        }
+    }
 
     /**
      * Generate a fake AxisEvent. This method usually use for testing purpose since we need to implement for multiple platform.
@@ -24,25 +67,7 @@ public class EventManager {
      * @param windowHandler  Window Handler Pointer
      * @return An AxisEvent
      */
-    public native static UiEvent selfCreateAxisEvent(GamepadAxis axis, int value, long gamepadHandler, long windowHandler);
-
-    /**
-     * Generate a fake CharEvent. This method usually use for testing purpose since we need to implement for multiple platform.
-     *
-     * @param length        Length
-     * @param character     Character
-     * @param windowHandler Window Handler Pointer
-     * @return An CharEvent
-     */
-    public native static UiEvent selfCreateCharEvent(int length, char character, long windowHandler);
-
-    /**
-     * Generate a fake ExitEvent. This method usually use for testing purpose since we need to implement for multiple platform.
-     *
-     * @param windowHandler Window Handler Pointer
-     * @return An ExitEvent
-     */
-    public native static UiEvent selfCreateExitEvent(long windowHandler);
+    public native static AppEvent selfCreateAxisEvent(GamepadAxis axis, float value, long gamepadHandler, long windowHandler);
 
     /**
      * Generate a fake GamepadEvent. This method usually use for testing purpose since we need to implement for multiple platform.
@@ -52,7 +77,7 @@ public class EventManager {
      * @param windowHandler  Window Handler Pointer
      * @return An GamepadEvent
      */
-    public native static UiEvent selfCreateGamepadEvent(boolean connected, long gamepadHandler, long windowHandler);
+    public native static AppEvent selfCreateGamepadEvent(boolean connected, long gamepadHandler, long windowHandler);
 
     /**
      * Generate a fake DropFileEvent. This method usually use for testing purpose since we need to implement for multiple platform.
@@ -61,7 +86,7 @@ public class EventManager {
      * @param windowHandler Window Handler Pointer
      * @return An DropFileEvent
      */
-    public native static UiEvent selfCreateDropFileEvent(String filePath, long windowHandler);
+    public native static AppEvent selfCreateDropFileEvent(String filePath, long windowHandler);
 
     /**
      * Generate a fake SizeEvent. This method usually use for testing purpose since we need to implement for multiple platform.
@@ -71,7 +96,7 @@ public class EventManager {
      * @param windowHandler Window Handler Pointer
      * @return An SizeEvent
      */
-    public native static UiEvent selfCreateSizeEvent(int width, int height, long windowHandler);
+    public native static AppEvent selfCreateSizeEvent(int width, int height, long windowHandler);
 
     /**
      * Generate a fake SuspendEvent. This method usually use for testing purpose since we need to implement for multiple platform.
@@ -80,38 +105,92 @@ public class EventManager {
      * @param windowHandler Window Handler Pointer
      * @return An SuspendEvent
      */
-    public native static UiEvent selfCreateSuspendEvent(SuspendState state, long windowHandler);
+    public native static AppEvent selfCreateSuspendEvent(SuspendState state, long windowHandler);
 
     /**
-     * Generate a fake WindowEvent. This method usually use for testing purpose since we need to implement for multiple platform.
+     * Register to receive suspend events.
      *
-     * @param windowHandler Window Handler Pointer
-     * @return An WindowEvent
+     * @param windowHandler Window handler pointer.
      */
-    public native static UiEvent selfCreateWindowEvent(long windowHandler);
+    public static void registerForSuspendEvents(long windowHandler) {
+        if (!windowRegisteredForSuspendEvent.contains(windowHandler)) {
+            registerForNativeSuspendEvents(windowHandler);
+            windowRegisteredForSuspendEvent.add(windowHandler);
+        }
+    }
 
     /**
-     * Generate a fake MouseEvent. This method usually use for testing purpose since we need to implement for multiple platform.
+     * Register to receive suspend events.
      *
-     * @param mx            X position of mouse
-     * @param my            Y position of mouse
-     * @param mz            Z position of mouse
-     * @param button        Mouse Button
-     * @param down          Mouse button pressed down or not
-     * @param move          Mouse moved or not
-     * @param windowHandler Window Handler Pointer
-     * @return An MouseEvent
+     * @param windowHandler Window handler pointer.
      */
-    public native static UiEvent selfCreateMouseEvent(int mx, int my, int mz, MouseButton button, boolean down, boolean move, long windowHandler);
+    private static native void registerForNativeSuspendEvents(long windowHandler);
 
     /**
-     * Generate a fake KeyEvent. This method usually use for testing purpose since we need to implement for multiple platform.
+     * Un-Register to receive suspend events.
      *
-     * @param key           Key triggered
-     * @param modifiers     Modifiers
-     * @param down          Key pressed down or not
-     * @param windowHandler Window Handler Pointer
-     * @return An KeyEvent
+     * @param windowHandler Window handler pointer.
      */
-    public native static UiEvent selfCreateKeyEvent(KeyEnum key, int modifiers, boolean down, long windowHandler);
+    public static void unregisterForSuspendEvents(long windowHandler) {
+        if (windowRegisteredForSuspendEvent.contains(windowHandler)) {
+            unregisterForNativeSuspendEvents(windowHandler);
+            windowRegisteredForSuspendEvent.remove(windowHandler);
+        }
+    }
+
+    /**
+     * Un-Register to receive suspend events.
+     *
+     * @param windowHandler Window handler pointer.
+     */
+    private static native void unregisterForNativeSuspendEvents(long windowHandler);
+
+    public static void startGamePadListening() {
+        if (!pollingGamePad) {
+            startGamePadNativeListening();
+            pollingGamePad = true;
+        }
+    }
+
+    private static native void startGamePadNativeListening();
+
+    public static void stopGamePadListening() {
+        if (pollingGamePad) {
+            stopGamePadNativeListening();
+            pollingGamePad = false;
+        }
+    }
+
+    private static native void stopGamePadNativeListening();
+
+    /**
+     * Register to receive gamepad events.
+     *
+     * @param windowHandler Window handler pointer.
+     */
+    public static void registerForGamepadEvents(long windowHandler) {
+        windowRegisteredForGamepadEvent.add(windowHandler);
+    }
+
+    /**
+     * Un-Register to receive suspend events.
+     *
+     * @param windowHandler Window handler pointer.
+     */
+    public static void unregisterForGamepadEvents(long windowHandler) {
+        windowRegisteredForGamepadEvent.remove(windowHandler);
+    }
+
+    /**
+     * This method will be called from Gamepad event manager.
+     *
+     * @param event UIEvent
+     */
+    public static void pushGamepadEvent(AppEvent event) {
+        for (Long windowHandler : windowRegisteredForGamepadEvent) {
+            var ev = event.clone();
+            ev.setWindowHandler(windowHandler);
+            getWindowEventQueue(windowHandler).addLast(ev);
+        }
+    }
 }

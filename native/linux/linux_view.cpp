@@ -41,23 +41,23 @@ extern "C" {
         void* nwh = nullptr;
 
         const char* session = getenv("XDG_SESSION_TYPE");
-//        if (session && strcmp(session, "wayland") == 0) {
-//            // 🔴 Wayland is not supported via JAWT — must use GLFW/SDL2 or platform layer
-//            jniLog(env, "ERROR", "linux_view.cpp", "❌ Wayland session detected: JAWT cannot get wl_display");
-//            ds->FreeDrawingSurfaceInfo(dsi);
-//            ds->Unlock(ds);
-//            awt.FreeDrawingSurface(ds);
-//            env->ThrowNew(env->FindClass("tech/lib/bgfx/ex/JniRuntimeException"), "❌ Wayland session detected: JAWT cannot get wl_display");
-//            return pd;
-//        } else {
-            // ✅ Assume X11
-            JAWT_X11DrawingSurfaceInfo* dsi_x11 = (JAWT_X11DrawingSurfaceInfo*)dsi->platformInfo;
-            ndt = (void*)dsi_x11->display;              // X11 Display*
-            nwh = (void*)(uintptr_t)dsi_x11->drawable;  // X11 Window
-            std::stringstream ss;
-            ss << "X11 Display: " << ndt << ", Window: " << (unsigned long)(uintptr_t)nwh;
-            jniLog(env, "INFO", "linux_view.cpp", ss.str().c_str());
-//        }
+        if (session && strcmp(session, "wayland") == 0) {
+           // 🔴 Wayland is not supported via JAWT — must use GLFW/SDL2 or platform layer
+           jniLog(env, "ERROR", "linux_view.cpp", "❌ Wayland session detected: JAWT cannot get wl_display");
+        //    ds->FreeDrawingSurfaceInfo(dsi);
+        //    ds->Unlock(ds);
+        //    awt.FreeDrawingSurface(ds);
+        //    env->ThrowNew(env->FindClass("tech/lib/bgfx/ex/JniRuntimeException"), "❌ Wayland session detected: JAWT cannot get wl_display");
+        //    return pd;
+        } 
+        // ✅ Assume X11
+        JAWT_X11DrawingSurfaceInfo* dsi_x11 = (JAWT_X11DrawingSurfaceInfo*)dsi->platformInfo;
+        ndt = (void*)dsi_x11->display;              // X11 Display*
+        nwh = (void*)(uintptr_t)dsi_x11->drawable;  // X11 Window
+        std::stringstream ss;
+        ss << "X11 Display: " << ndt << ", Window: " << (unsigned long)(uintptr_t)nwh;
+        jniLog(env, "INFO", "linux_view.cpp", ss.str().c_str());
+
 
         // Set into BGFX
         pd.ndt = ndt;

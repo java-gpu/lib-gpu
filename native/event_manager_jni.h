@@ -14,6 +14,9 @@
 #include <cstdio>
 #include <sstream>
 
+#include <unordered_map>
+#include <map>
+
 enum class UiEventType {
     Axis,
     Char,
@@ -29,7 +32,7 @@ enum class UiEventType {
 
 struct GamepadAxis {
     enum class GamepadAxisType {
-        LeftX, LeftY, LeftZ, RightX, RightY, RightZ, None
+        LeftX, LeftY, LeftZ, RightX, RightY, RightZ, AxisNone
     };
 
     GamepadAxisType type;
@@ -39,120 +42,11 @@ struct GamepadAxis {
     GamepadAxis() : type(GamepadAxisType::LeftX), name("LeftX") {}
 };
 
-enum class KeyEnum {
-    None,
-    Esc,
-    Return,
-    Tab,
-    Space,
-    Backspace,
-    Up,
-    Down,
-    Left,
-    Right,
-    Insert,
-    Delete,
-    Home,
-    End,
-    PageUp,
-    PageDown,
-    Print,
-    Plus,
-    Minus,
-    LeftBracket,
-    RightBracket,
-    Semicolon,
-    Quote,
-    Comma,
-    Period,
-    Slash,
-    Backslash,
-    Tilde,
-    F1,
-    F2,
-    F3,
-    F4,
-    F5,
-    F6,
-    F7,
-    F8,
-    F9,
-    F10,
-    F11,
-    F12,
-    NumPad0,
-    NumPad1,
-    NumPad2,
-    NumPad3,
-    NumPad4,
-    NumPad5,
-    NumPad6,
-    NumPad7,
-    NumPad8,
-    NumPad9,
-    Key0,
-    Key1,
-    Key2,
-    Key3,
-    Key4,
-    Key5,
-    Key6,
-    Key7,
-    Key8,
-    Key9,
-    KeyA,
-    KeyB,
-    KeyC,
-    KeyD,
-    KeyE,
-    KeyF,
-    KeyG,
-    KeyH,
-    KeyI,
-    KeyJ,
-    KeyK,
-    KeyL,
-    KeyM,
-    KeyN,
-    KeyO,
-    KeyP,
-    KeyQ,
-    KeyR,
-    KeyS,
-    KeyT,
-    KeyU,
-    KeyV,
-    KeyW,
-    KeyX,
-    KeyY,
-    KeyZ,
-
-    GamepadA,
-    GamepadB,
-    GamepadX,
-    GamepadY,
-    GamepadThumbL,
-    GamepadThumbR,
-    GamepadShoulderL,
-    GamepadShoulderR,
-    GamepadUp,
-    GamepadDown,
-    GamepadLeft,
-    GamepadRight,
-    GamepadBack,
-    GamepadStart,
-    GamepadGuide
-};
-
 enum class SuspendState {
     WillSuspend,
     DidSuspend,
     WillResume,
     DidResume
-};
-
-enum class MouseButton {
-    None, Left, Middle, Right, OTHER
 };
 
 struct NativeUiEvent {
@@ -161,7 +55,7 @@ struct NativeUiEvent {
 
     // Axis Event
     GamepadAxis axis;
-    int32_t value;
+    float axisValue;
     int64_t gamepadHandler;
 
     // Char Event
@@ -176,13 +70,13 @@ struct NativeUiEvent {
     // Reuse gamepadHandler in axis event
 
     // Key Event
-    KeyEnum key;
+    int32_t key;
     int32_t modifiers;
     bool down;
 
     // Mouse Event
     int32_t mx, my, mz;
-    MouseButton button;
+    int32_t button;
     bool move;
 
     // Size Event
@@ -196,7 +90,7 @@ struct NativeUiEvent {
     NativeUiEvent()
         : type(UiEventType::Window), windowHandler(0),
           // Axis Event
-          axis(GamepadAxis(GamepadAxis::GamepadAxisType::LeftX, "LeftX")), value(0), gamepadHandler(0),
+          axis(GamepadAxis(GamepadAxis::GamepadAxisType::LeftX, "LeftX")), axisValue(0), gamepadHandler(0),
           // Char Event
           length(0), character(0),
           // Drop File Event
@@ -204,9 +98,9 @@ struct NativeUiEvent {
           //Gamepad Event
           connected(false),
           // KeyEvent
-          key(KeyEnum::None), modifiers(0), down(false),
+          key(0), modifiers(0), down(false),
           // Mouse Event
-          mx(0), my(0), mz(0), button(MouseButton::None), move(false),
+          mx(0), my(0), mz(0), button(0), move(false),
           // Size Event
           width(0), height(0),
           // Suspend Event
@@ -214,33 +108,42 @@ struct NativeUiEvent {
     {}
 };
 
+
+// Declare JavaVM pointer as extern
+extern JavaVM* jvm; // Declaration only, no definition
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
     jobject createJavaUiEvent(JNIEnv* env, const NativeUiEvent nativeEvent);
 
-    bool pollEventFromSystem(void* windowHandler, NativeUiEvent* evt);
+    #ifdef __APPLE__
+        void registerForSuspendEventsOnMac(JNIEnv* env, void* windowHandler);
+    #endif
 
-//    #ifdef __APPLE__
-//        // Forward declare the Objective-C event polling function
-//        NativeUiEvent pollEventFromSystem(void* windowHandler);
-//    #endif
+    #ifdef _WIN32
+        extern std::map<HWND, WNDPROC> wndProcMap;
+        LRESULT CALLBACK CustomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    #endif
 
-//    #ifdef __linux__
-//        bgfx::PlatformData setupLinuxPlatformData(JNIEnv* env, jobject canvas);
-//    #endif
+    #ifdef __linux__
+        void* listen_for_suspend(void* arg);
+    #endif
 
     jobject createJavaAxisEvent(JNIEnv* env, const NativeUiEvent nativeEvent);
-    jobject createJavaCharEvent(JNIEnv* env, const NativeUiEvent nativeEvent);
-    jobject createJavaExitEvent(JNIEnv* env, const NativeUiEvent nativeEvent);
     jobject createJavaGamepadEvent(JNIEnv* env, const NativeUiEvent nativeEvent);
-    jobject createJavaKeyEvent(JNIEnv* env, const NativeUiEvent nativeEvent);
-    jobject createJavaMouseEvent(JNIEnv* env, const NativeUiEvent nativeEvent);
     jobject createJavaSizeEvent(JNIEnv* env, const NativeUiEvent nativeEvent);
-    jobject createJavaWindowEvent(JNIEnv* env, const NativeUiEvent nativeEvent);
     jobject createJavaSuspendEvent(JNIEnv* env, const NativeUiEvent nativeEvent);
     jobject createJavaDropFileEvent(JNIEnv* env, const NativeUiEvent nativeEvent);
+
+    void submitSuspendStateToJava(JNIEnv* env, SuspendState suspendState);
+
+    void pollGamepads(JNIEnv* env);
+
+    void sendAxisEvent(JNIEnv* env, int32_t gamepadId, int32_t axisId, float value);
+    void sendGamepadConnectedEvent(JNIEnv* env, int32_t gamepadId);
+    void sendGamepadDisconnectedEvent(JNIEnv* env, int32_t gamepadId);
 
 #ifdef __cplusplus
 }
