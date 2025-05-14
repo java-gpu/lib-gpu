@@ -49,11 +49,9 @@ public class Entry {
         AppEvent ev = null;
         do {
             ev = EventManager.pollUiEvent(input.getWindowHandler());
-//
-//            if (NULL != ev)
-//            {
-//                switch (ev->m_type)
-//                {
+
+            if (null != ev) {
+                switch (ev.getEventType()) {
 //                    case Event::Axis:
 //                    {
 //						const AxisEvent* axis = static_cast<const AxisEvent*>(ev);
@@ -144,8 +142,8 @@ public class Entry {
 //
 //                    default:
 //                        break;
-//                }
-//            }
+                }
+            }
 //
 //            inputProcess();
 //

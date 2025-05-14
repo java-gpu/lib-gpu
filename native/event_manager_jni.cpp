@@ -268,7 +268,9 @@ extern "C" {
         nativeEvent.type = UiEventType::DropFile;
         nativeEvent.windowHandler = static_cast<int64_t> (windowHandler);
 
-        nativeEvent.filePath = env->GetStringUTFChars(filePath, nullptr);
+        const char* temp = env->GetStringUTFChars(filePath, nullptr);
+        nativeEvent.filePath = strdup(temp);  // Make a full copy!
+        env->ReleaseStringUTFChars(filePath, temp);
 
         return createJavaDropFileEvent(env, nativeEvent);
     }

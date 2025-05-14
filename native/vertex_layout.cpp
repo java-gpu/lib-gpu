@@ -7,11 +7,11 @@
 
 extern "C" {
 
-// Signature: private native long begin(int rendererType);
-JNIEXPORT jlong JNICALL Java_tech_gpu_lib_bgfx_jni_VertexLayout_begin
-  (JNIEnv* env, jobject obj, jint rendererType) {
-    auto layout = new bgfx::VertexLayout();
-    layout->begin((bgfx::RendererType::Enum)rendererType);
+JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_VertexLayout_begin
+  (JNIEnv* env, jobject obj, jobject rendererType) {
+    auto* layout = new bgfx::VertexLayout();
+    bgfx::RendererType::Enum type = toRendererType(env, rendererType);
+    layout->begin(type);
     return reinterpret_cast<jlong>(layout);
 }
 

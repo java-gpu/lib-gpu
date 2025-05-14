@@ -21,6 +21,15 @@ set "listJavaFile=%listJavaFile% src\main\java\tech\lib\ui\enu\SuspendState.java
 set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\enu\BgfxResetFlag.java"
 set "listJavaFile=%listJavaFile% src\main\java\tech\lib\ui\enu\GamepadAxis.java"
 set "listJavaFile=%listJavaFile% src\main\java\tech\lib\ui\event\SuspendEvent.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\enu\UniformType.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\enu\RendererType.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\enu\TextureFormat.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\enu\ViewMode.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\enu\BgfxFormatCaps.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\data\TransientVertexBuffer.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\data\TransientIndexBuffer.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\util\BgfxEncoder.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\graphics\TextureHandle.java"
 
 echo "Executing command %COMMAND%"
 if "%COMMAND%" == "generateJNIHeaders" (

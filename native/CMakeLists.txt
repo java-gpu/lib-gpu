@@ -82,6 +82,7 @@ set(SOURCES
     bx_timer.cpp
     event_manager_jni.cpp
     game_pad_event.cpp
+    memory_handle_jni.cpp
 )
 
 if(APPLE)
