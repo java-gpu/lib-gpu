@@ -3,19 +3,21 @@ package tech.lib.bgfx.jni;
 import com.sun.jna.MyJFramePointer;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
-import tech.lib.bgfx.enu.BgfxResetFlag;
+import tech.lib.bgfx.data.TransientIndexBuffer;
+import tech.lib.bgfx.data.TransientVertexBuffer;
+import tech.lib.bgfx.enu.*;
+import tech.lib.bgfx.graphics.TextureHandle;
+import tech.lib.bgfx.util.BgfxEncoder;
 import tech.lib.bgfx.util.PlatformInfo;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
 public class Bgfx {
-
-    static {
-        JniLoader.loadBgFxJni();
-    }
 
     /**
      * Variable definition.
@@ -23,17 +25,19 @@ public class Bgfx {
     public static final int CLEAR_COLOR = 0x1;
     public static final int CLEAR_DEPTH = 0x2;
     public static final int CLEAR_STENCIL = 0x4;
+    // Constants representing various state flags
+    public static final int STATE_WRITE_RGB = 0x00000001;
+    public static final int STATE_WRITE_A = 0x00000002;
+    public static final int STATE_MSAA = 0x00000004;
+    public static final long STATE_BLEND_SRC_ALPHA = 0x0000001000000000L;
+    public static final long STATE_BLEND_INV_SRC_ALPHA = 0x0000002000000000L;
 
-    /**
-     * Init BGFX platform display.
-     *
-     * @param windowHandlerPointer Native window handler pointer.
-     * @param canvas               AWT Canvas. Some platform like linux required it to retrieve information.
-     * @param priority3D           Priority to select 3D render type
-     * @param gpuIndex             GPU index
-     * @return True if success
-     */
-    public static native boolean init(long windowHandlerPointer, Canvas canvas, boolean priority3D, int gpuIndex);
+    // Method to combine the states using bitwise OR
+    public static final int COMBINED_STATE_1 = STATE_WRITE_RGB | STATE_WRITE_A | STATE_MSAA;
+
+    static {
+        JniLoader.loadBgFxJni();
+    }
 
     /**
      * Init BGFX platform display. Priority to select 2D render type.
@@ -45,6 +49,17 @@ public class Bgfx {
     public static boolean init(long windowHandlerPointer, Canvas canvas, int gpuIndex) {
         return init(windowHandlerPointer, canvas, false, gpuIndex);
     }
+
+    /**
+     * Init BGFX platform display.
+     *
+     * @param windowHandlerPointer Native window handler pointer.
+     * @param canvas               AWT Canvas. Some platform like linux required it to retrieve information.
+     * @param priority3D           Priority to select 3D render type
+     * @param gpuIndex             GPU index
+     * @return True if success
+     */
+    public static native boolean init(long windowHandlerPointer, Canvas canvas, boolean priority3D, int gpuIndex);
 
     /**
      * Shut down BGFX.
@@ -146,6 +161,22 @@ public class Bgfx {
 
     public static native long loadShader(String path);
 
+    public static long loadShaderFromClasspathMemory(String relativeLocation) throws IOException {
+        try (InputStream in = Bgfx.class.getClassLoader().getResourceAsStream(relativeLocation)) {
+            if (in == null) {
+                throw new IOException("Fail to load shader from classpath path " + relativeLocation);
+            }
+            byte[] byteArray = new byte[in.available()];
+            int read = in.read(byteArray);
+            if (read < byteArray.length) {
+                throw new IOException("Load shader from classpath path [" + relativeLocation + "] error! Missed some bytes data!");
+            }
+            return Bgfx.loadShaderFromMemory(ByteBuffer.wrap(byteArray));
+        }
+    }
+
+    public static native long loadShaderFromMemory(ByteBuffer shaderData);
+
     public static native long createProgram(long vsHandle, long fsHandle, boolean destroyShaders);
 
     public static native long createVertexBuffer(ByteBuffer vertexData, long layoutHandle);
@@ -176,4 +207,41 @@ public class Bgfx {
     public static native void destroyIndexBuffer(long ibh);
 
     public static native void destroyProgram(long program);
+
+    public static native void destroyTexture(long handle);
+
+    public static native void destroyUniform(short handle);
+
+    public static native RendererType getRendererType();
+
+    public static native short createUniform(String name, UniformType uniformType);
+
+    public static TextureHandle createTexture2D(short width, short height, boolean hasMips, byte numLayers, TextureFormat format, int flags,
+            ByteBuffer mem) {
+        long textureId = createNativeTexture2D(width, height, hasMips, numLayers, format, flags, mem);
+        return new TextureHandle(textureId);
+    }
+
+    private native static long createNativeTexture2D(short width, short height, boolean hasMips, byte numLayers, TextureFormat format,
+            int flags, ByteBuffer mem);
+
+    public static native void setViewName(int viewId, String name);
+
+    public static native void setViewMode(int viewId, ViewMode mode);
+
+    public static native BgfxCaps getCaps();
+
+    public static native int getAvailTransientVertexBuffer(int num, long vertexLayoutPtr);
+
+    public static native int getAvailTransientIndexBuffer(int num);
+
+    public static native TransientVertexBuffer allocTransientVertexBuffer(int num, long vertexLayoutPtr);
+
+    public static native TransientIndexBuffer allocTransientIndexBuffer(int num, boolean index32);
+
+    public static native BgfxEncoder begin();
+
+    public static native long STATE_BLEND_FUNC(long src, long dst);
+
+    public static native void setUniform(int uniformHandle, float[] lodEnabled);
 }

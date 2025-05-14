@@ -30,6 +30,7 @@ struct PosColorVertex {
 bgfx::VertexLayout PosColorVertex::ms_layout;
 
 extern "C" {
+
     #ifdef __APPLE__
         extern void* getNSViewFromCanvas(JNIEnv* env, jobject canvas);
         // extern void* createNativeWindow(JNIEnv* env, int x, int y, int width, int height, const char* title);

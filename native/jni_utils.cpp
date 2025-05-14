@@ -43,3 +43,60 @@ void jniLog(JNIEnv* env, const char* level, const char* fileName, const char* me
     // 7. Call the method
     env->CallVoidMethod(loggerInstance, logMethod, logLevelObj, fileNameStr, messageStr);
 }
+
+// Convert Java enum to bgfx::RendererType::Enum
+bgfx::RendererType::Enum toRendererType(JNIEnv* env, jobject jRendererType) {
+    jclass enumClass = env->GetObjectClass(jRendererType);
+    jmethodID ordinalMethod = env->GetMethodID(enumClass, "ordinal", "()I");
+    jint ordinal = env->CallIntMethod(jRendererType, ordinalMethod);
+    return static_cast<bgfx::RendererType::Enum>(ordinal);
+}
+
+
+// JNI method to map bgfx::Caps::Limits to Java BgfxLimits
+jobject fromLimits(JNIEnv* env, const bgfx::Caps::Limits& limits) {
+    // Find the Java BgfxLimits class
+    jclass limitsClass = env->FindClass("com/example/yourpackage/BgfxLimits");
+    if (limitsClass == nullptr) {
+        // Handle error if class is not found
+        return nullptr;
+    }
+
+    // Get the constructor of BgfxLimits class: (all the required integers)
+    jmethodID constructor = env->GetMethodID(limitsClass, "<init>", "(IIIIIIIIIIIIIIIIIIIIII)V");
+    if (constructor == nullptr) {
+        // Handle error if constructor is not found
+        return nullptr;
+    }
+
+    // Create the Java BgfxLimits object and initialize it with values from bgfx::Caps::Limits
+    jobject limitsObject = env->NewObject(
+        limitsClass, constructor,
+        limits.maxDrawCalls,
+        limits.maxBlits,
+        limits.maxTextureSize,
+        limits.maxTextureLayers,
+        limits.maxViews,
+        limits.maxFrameBuffers,
+        limits.maxFBAttachments,
+        limits.maxPrograms,
+        limits.maxShaders,
+        limits.maxTextures,
+        limits.maxTextureSamplers,
+        limits.maxComputeBindings,
+        limits.maxVertexLayouts,
+        limits.maxVertexStreams,
+        limits.maxIndexBuffers,
+        limits.maxVertexBuffers,
+        limits.maxDynamicIndexBuffers,
+        limits.maxDynamicVertexBuffers,
+        limits.maxUniforms,
+        limits.maxOcclusionQueries,
+        limits.maxEncoders,
+        limits.minResourceCbSize,
+        limits.transientVbSize,
+        limits.transientIbSize
+    );
+
+    return limitsObject;
+}

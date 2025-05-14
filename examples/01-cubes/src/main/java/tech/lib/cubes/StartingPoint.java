@@ -1,9 +1,12 @@
 package tech.lib.cubes;
 
 import ch.qos.logback.core.util.StringUtil;
+import lombok.extern.slf4j.Slf4j;
 import tech.lib.bgfx.app.AppWindow;
+import tech.lib.bgfx.app.ShaderHandler;
 import tech.lib.bgfx.util.PlatformInfo;
 
+@Slf4j
 public class StartingPoint {
     public static void main(String[] args) {
         String vsShaderPath = System.getProperty("VS_SHADER_PATH");
@@ -21,7 +24,10 @@ public class StartingPoint {
         }
         AppWindow window = new AppWindow(1280, 720, "Cubes example");
         try {
-            window.loadShaderProgram(vsShaderPath, fsShaderPath);
+            ShaderHandler shaderHandler = window.loadShaderProgram(vsShaderPath, fsShaderPath);
+            if (shaderHandler == null) {
+                log.error("Load shader fail!!");
+            }
         } finally {
             window.shutdownBgfx();
         }

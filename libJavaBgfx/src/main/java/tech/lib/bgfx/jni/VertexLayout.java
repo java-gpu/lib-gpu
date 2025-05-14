@@ -1,6 +1,7 @@
 package tech.lib.bgfx.jni;
 
 import lombok.Data;
+import tech.lib.bgfx.enu.RendererType;
 import tech.lib.bgfx.util.PlatformInfo;
 
 @Data
@@ -15,11 +16,20 @@ public class VertexLayout {
 
     public VertexLayout(RendererType rendererType) {
         this.rendererType = rendererType;
-        this.layoutPtr = begin(rendererType.getValue());
+        this.layoutPtr = begin(rendererType);
     }
 
-    public void add(Attrib attrib, int num, AttribType attribType, boolean normalized, boolean asInt) {
+    public VertexLayout add(Attrib attrib, int num, AttribType attribType) {
+        return add(attrib, num, attribType, false);
+    }
+
+    public VertexLayout add(Attrib attrib, int num, AttribType attribType, boolean normalized) {
+        return add(attrib, num, attribType, normalized, false);
+    }
+
+    public VertexLayout add(Attrib attrib, int num, AttribType attribType, boolean normalized, boolean asInt) {
         add(layoutPtr, attrib.value, num, attribType.value, normalized, asInt);
+        return this;
     }
 
     public void end() {
@@ -31,7 +41,7 @@ public class VertexLayout {
     }
 
     // Now these are instance-bound native methods
-    private native long begin(int rendererType);
+    private native long begin(RendererType rendererType);
 
     private native void add(long layoutPtr, int attrib, int num, int attribType, boolean normalized, boolean asInt);
 

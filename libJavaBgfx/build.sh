@@ -33,9 +33,12 @@ export listJavaFile=(
     "src/main/java/tech/lib/ui/event/AppEvent.java"
     "src/main/java/tech/lib/ui/enu/AppEventType.java"
     "src/main/java/tech/lib/ui/enu/SuspendState.java"
-    "src/main/java/tech/lib/bgfx/enu/BgfxResetFlag.java"
     "src/main/java/tech/lib/ui/enu/GamepadAxis.java"
     "src/main/java/tech/lib/ui/event/SuspendEvent.java"
+     "src/main/java/tech/lib/bgfx/data/TransientVertexBuffer.java"
+     "src/main/java/tech/lib/bgfx/data/TransientIndexBuffer.java"
+     "src/main/java/tech/lib/bgfx/util/BgfxEncoder.java"
+     "src/main/java/tech/lib/bgfx/graphics/TextureHandle.java"
 )
 
 includeScriptPath=../support-scripts/generateJniHeader.sh
@@ -44,7 +47,7 @@ chmod +x "${includeScriptPath}"
 
 echo "Executing command ${COMMAND}"
 if [[ "${COMMAND}" = "generateJNIHeaders" ]]; then
-  generateJNIHeaders "${srcFolder}/jni" "src/main/java/tech/lib/ui/jni"
+  generateJNIHeaders "${srcFolder}/jni" "src/main/java/tech/lib/ui/jni" "src/main/java/tech/lib/bgfx/enu/"
   if [[ "${PLATFORM}" = "linux" ]]; then
     mkdir -p build/native
     cp -v build/generated/sources/headers/java/main/*.h build/native/

@@ -32,6 +32,12 @@
   (Ltech/lib/ui/event/KeyEnum;IZJ)V => input: (Object "tech/lib/ui/event/KeyEnum", int, boolean, long) and return void
 **/
 
+// Function to map the Java enum to bgfx enum
+bgfx::TextureFormat::Enum javaToBgfxTextureFormat(JNIEnv* env, jobject format) {
+    jint value = env->CallIntMethod(format, env->GetMethodID(env->GetObjectClass(format), "getValue", "()I"));
+    return static_cast<bgfx::TextureFormat::Enum>(value);
+}
+
 extern "C" {
 
     JNIEXPORT jboolean JNICALL Java_tech_lib_bgfx_jni_Bgfx_init(JNIEnv* env, jclass clzz, jlong windowPointer, jobject canvas, jboolean priority3D, jint gpuIndex) {
@@ -175,11 +181,10 @@ extern "C" {
         bgfx::setVertexBuffer(0, &tvb);
         bgfx::setIndexBuffer(&tib);
         bgfx::setState(BGFX_STATE_DEFAULT);
-        // TODO Need shader program here
-        //bgfx::submit(0, program); // You must set up a shader program
     }
 
-    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setViewClear(JNIEnv* env, jclass, jint viewId, jint clearFlags, jint rgba, jfloat depth, jbyte stencil) {
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setViewClear(JNIEnv* env, jclass, jint viewId, jint clearFlags,
+            jint rgba, jfloat depth, jbyte stencil) {
         bgfx::setViewClear(
             static_cast<bgfx::ViewId>(viewId),
             static_cast<uint16_t>(clearFlags),
@@ -212,6 +217,18 @@ extern "C" {
 
         bgfx::ShaderHandle handle = bgfx::createShader(mem);
         return static_cast<jlong>(handle.idx);
+    }
+
+    JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_loadShaderFromMemory(JNIEnv* env, jclass, jobject shaderData) {
+        void* data = env->GetDirectBufferAddress(shaderData);
+        jlong size = env->GetDirectBufferCapacity(shaderData);
+
+        if (!data || size <= 0)
+            return -1;
+
+        const bgfx::Memory* mem = bgfx::copy(data, (uint32_t)size);
+        bgfx::ShaderHandle handle = bgfx::createShader(mem);
+        return (jlong) handle.idx;
     }
 
     JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_createProgram(JNIEnv*, jclass, jlong vsHandle, jlong fsHandle, jboolean destroyShaders) {
@@ -288,5 +305,247 @@ extern "C" {
     
     JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_destroyProgram(JNIEnv*, jclass, jlong program) {
         bgfx::destroy(bgfx::ProgramHandle{ (uint16_t)program });
+    }
+
+    JNIEXPORT jobject JNICALL Java_tech_lib_bgfx_jni_Bgfx_getRendererType(JNIEnv* env, jclass) {
+        bgfx::RendererType::Enum type = bgfx::getRendererType();
+
+        // Get RendererType enum class
+        jclass enumClass = env->FindClass("tech/lib/bgfx/enu/RendererType");
+
+        // Get static values() method
+        jmethodID valuesMethod = env->GetStaticMethodID(enumClass, "values", "()[Ltech/lib/bgfx/enu/RendererType;");
+        jobjectArray enumValues = (jobjectArray)env->CallStaticObjectMethod(enumClass, valuesMethod);
+
+        return env->GetObjectArrayElement(enumValues, static_cast<jint>(type));
+    }
+
+    JNIEXPORT jshort JNICALL Java_tech_lib_bgfx_jni_Bgfx_createUniform(JNIEnv* env, jclass, jstring jname, jobject jtype) {
+        const char* name = env->GetStringUTFChars(jname, nullptr);
+
+        // Get UniformType.ordinal()
+        jclass enumClass = env->GetObjectClass(jtype);
+        jmethodID ordinalMethod = env->GetMethodID(enumClass, "ordinal", "()I");
+        jint typeOrdinal = env->CallIntMethod(jtype, ordinalMethod);
+
+        bgfx::UniformHandle handle = bgfx::createUniform(name, (bgfx::UniformType::Enum)typeOrdinal);
+
+        env->ReleaseStringUTFChars(jname, name);
+
+        return (jshort)handle.idx;
+    }
+
+
+    // JNI method to create a texture
+    JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_createNativeTexture2D(JNIEnv* env, jclass,
+        jshort width, jshort height, jboolean hasMips, jbyte numLayers, jobject format, jint flags, jobject buffer) {
+
+        // Get the raw data from the ByteBuffer
+        void* data = env->GetDirectBufferAddress(buffer);
+
+        // Convert the Java TextureFormat enum to bgfx TextureFormat
+        bgfx::TextureFormat::Enum bgfxFormat = javaToBgfxTextureFormat(env, format);
+
+        // Create the texture using bgfx
+        bgfx::TextureHandle textureHandle = bgfx::createTexture2D(
+            width, height, hasMips, numLayers, bgfxFormat, flags, bgfx::copy(data, width * height * 4)
+        );
+
+        // Return the texture handle (as a jlong)
+        return (jlong) textureHandle.idx;
+    }
+
+    JNIEXPORT jobject JNICALL Java_tech_lib_bgfx_jni_Bgfx_copy(JNIEnv* env, jclass, jobject data, jint size) {
+        // Get direct buffer address (native memory) from the ByteBuffer
+        void* bufferData = env->GetDirectBufferAddress(data);
+
+        // Create a bgfx::Memory object and assign the data and size
+        const bgfx::Memory* mem = bgfx::alloc(size);
+        memcpy(mem->data, bufferData, size);
+
+        // Wrap the native memory (mem->data) in a direct ByteBuffer
+        jobject byteBuffer = env->NewDirectByteBuffer(mem->data, size);
+
+        // Optional: Store mem pointer somewhere (e.g., return it in another JNI method or track in a map)
+        // You must manage mem's lifecycle manually if not passing to bgfx::createTexture2D or similar
+
+        return byteBuffer;
+    }
+
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_destroyTexture(JNIEnv*, jclass, jlong handle) {
+        bgfx::destroy(bgfx::TextureHandle{ (uint16_t)handle });
+    }
+
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_destroyUniform(JNIEnv*, jclass, jshort handleIdx) {
+        bgfx::UniformHandle handle = { static_cast<uint16_t>(handleIdx) };
+        bgfx::destroy(handle);
+    }
+
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setViewName(JNIEnv* env, jclass, jint viewId, jstring jname) {
+        const char* name = env->GetStringUTFChars(jname, nullptr);
+        bgfx::setViewName((bgfx::ViewId)viewId, name);
+        env->ReleaseStringUTFChars(jname, name);
+    }
+
+    // Java signature: void setViewMode(int viewId, ViewMode mode)
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setViewMode(JNIEnv* env, jclass, jint viewId, jobject modeEnum) {
+        // Get the class and method to extract the int value from the enum
+        jclass enumClass = env->GetObjectClass(modeEnum);
+        jmethodID getValueMethod = env->GetMethodID(enumClass, "getValue", "()I");
+
+        jint modeValue = env->CallIntMethod(modeEnum, getValueMethod);
+
+        bgfx::ViewMode::Enum mode;
+
+        switch (modeValue) {
+            case 0:
+                mode = bgfx::ViewMode::Default;
+                break;
+            case 1:
+                mode = bgfx::ViewMode::Sequential;
+                break;
+            case 2:
+                mode = bgfx::ViewMode::DepthAscending;
+                break;
+            case 3:
+                mode = bgfx::ViewMode::DepthDescending;
+                break;
+            default:
+                mode = bgfx::ViewMode::Default;
+                break;
+        }
+
+        bgfx::setViewMode(static_cast<bgfx::ViewId> (viewId), mode);
+    }
+
+    JNIEXPORT jobject JNICALL Java_tech_lib_bgfx_jni_Bgfx_getCaps(JNIEnv* env, jclass cls) {
+        const bgfx::Caps* caps = bgfx::getCaps();
+
+        // Get Java class references
+        jclass capsClass = env->FindClass("BgfxCaps");
+        jclass limitsClass = env->FindClass("BgfxLimits");
+        jclass rendererEnum = env->FindClass("RendererType");
+
+        // Get constructors
+        jmethodID capsConstructor = env->GetMethodID(capsClass, "<init>", "()V");
+        jmethodID limitsConstructor = env->GetMethodID(limitsClass, "<init>", "()V");
+
+        // Create Java objects
+        jobject capsObj = env->NewObject(capsClass, capsConstructor);
+        jobject limitsObj = env->NewObject(limitsClass, limitsConstructor);
+
+        // Convert rendererType
+        jmethodID fromIntMethod = env->GetStaticMethodID(rendererEnum, "fromInt", "(I)LRendererType;");
+        jobject rendererObj = env->CallStaticObjectMethod(rendererEnum, fromIntMethod, caps->rendererType);
+
+        // Set fields in BgfxCaps
+        env->SetObjectField(capsObj, env->GetFieldID(capsClass, "rendererType", "LRendererType;"), rendererObj);
+        env->SetLongField(capsObj, env->GetFieldID(capsClass, "supported", "J"), static_cast<jlong>(caps->supported));
+        env->SetIntField(capsObj, env->GetFieldID(capsClass, "vendorId", "I"), static_cast<jint>(caps->vendorId));
+        env->SetIntField(capsObj, env->GetFieldID(capsClass, "deviceId", "I"), static_cast<jint>(caps->deviceId));
+        env->SetBooleanField(capsObj, env->GetFieldID(capsClass, "homogeneousDepth", "Z"), static_cast<jboolean>(caps->homogeneousDepth));
+        env->SetBooleanField(capsObj, env->GetFieldID(capsClass, "originBottomLeft", "Z"), static_cast<jboolean>(caps->originBottomLeft));
+        env->SetIntField(capsObj, env->GetFieldID(capsClass, "numGPUs", "I"), static_cast<jint>(caps->numGPUs));
+
+        // Populate BgfxLimits fields
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxDrawCalls", "I"), static_cast<jint>(caps->limits.maxDrawCalls));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxBlits", "I"), static_cast<jint>(caps->limits.maxBlits));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxTextureSize", "I"), static_cast<jint>(caps->limits.maxTextureSize));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxTextureLayers", "I"), static_cast<jint>(caps->limits.maxTextureLayers));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxViews", "I"), static_cast<jint>(caps->limits.maxViews));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxFrameBuffers", "I"), static_cast<jint>(caps->limits.maxFrameBuffers));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxFBAttachments", "I"), static_cast<jint>(caps->limits.maxFBAttachments));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxPrograms", "I"), static_cast<jint>(caps->limits.maxPrograms));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxShaders", "I"), static_cast<jint>(caps->limits.maxShaders));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxTextures", "I"), static_cast<jint>(caps->limits.maxTextures));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxTextureSamplers", "I"), static_cast<jint>(caps->limits.maxTextureSamplers));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxComputeBindings", "I"), static_cast<jint>(caps->limits.maxComputeBindings));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxVertexLayouts", "I"), static_cast<jint>(caps->limits.maxVertexLayouts));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxVertexStreams", "I"), static_cast<jint>(caps->limits.maxVertexStreams));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxIndexBuffers", "I"), static_cast<jint>(caps->limits.maxIndexBuffers));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxVertexBuffers", "I"), static_cast<jint>(caps->limits.maxVertexBuffers));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxDynamicIndexBuffers", "I"), static_cast<jint>(caps->limits.maxDynamicIndexBuffers));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxDynamicVertexBuffers", "I"), static_cast<jint>(caps->limits.maxDynamicVertexBuffers));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxUniforms", "I"), static_cast<jint>(caps->limits.maxUniforms));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxOcclusionQueries", "I"), static_cast<jint>(caps->limits.maxOcclusionQueries));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "maxEncoders", "I"), static_cast<jint>(caps->limits.maxEncoders));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "minResourceCbSize", "I"), static_cast<jint>(caps->limits.minResourceCbSize));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "transientVbSize", "I"), static_cast<jint>(caps->limits.transientVbSize));
+        env->SetIntField(limitsObj, env->GetFieldID(limitsClass, "transientIbSize", "I"), static_cast<jint>(caps->limits.transientIbSize));
+
+        return capsObj;
+    }
+
+    JNIEXPORT jint JNICALL Java_tech_lib_bgfx_jni_Bgfx_getAvailTransientVertexBuffer(JNIEnv* env, jclass clazz, jint num, jlong vertexLayoutPtr) {
+        const bgfx::VertexLayout* layout = reinterpret_cast<const bgfx::VertexLayout*>(vertexLayoutPtr);
+        return bgfx::getAvailTransientVertexBuffer(static_cast<uint32_t>(num), *layout);
+    }
+
+    JNIEXPORT jint JNICALL Java_tech_lib_bgfx_jni_Bgfx_getAvailTransientIndexBuffer (JNIEnv* env, jclass clazz, jint num) {
+        return bgfx::getAvailTransientIndexBuffer(static_cast<uint32_t>(num));
+    }
+
+    JNIEXPORT jobject JNICALL Java_tech_lib_bgfx_jni_Bgfx_allocTransientVertexBuffer(JNIEnv* env, jclass clazz, jint num, jlong layoutPtr) {
+        auto* layout = reinterpret_cast<bgfx::VertexLayout*>(layoutPtr);
+        auto* tvb = new bgfx::TransientVertexBuffer();
+
+        bgfx::allocTransientVertexBuffer(tvb, static_cast<uint32_t>(num), *layout);
+
+        jclass cls = env->FindClass("tech/lib/bgfx/jni/TransientVertexBuffer");
+        jmethodID ctor = env->GetMethodID(cls, "<init>", "(J)V");
+        return env->NewObject(cls, ctor, reinterpret_cast<jlong>(tvb));
+    }
+
+    JNIEXPORT jobject JNICALL Java_tech_lib_bgfx_jni_Bgfx_allocTransientIndexBuffer(JNIEnv* env, jclass clazz, jint num, jboolean index32) {
+        auto* tib = new bgfx::TransientIndexBuffer();
+
+        bgfx::allocTransientIndexBuffer(tib, static_cast<uint32_t>(num), index32 == JNI_TRUE);
+
+        jclass cls = env->FindClass("tech/lib/bgfx/jni/TransientIndexBuffer");
+        jmethodID ctor = env->GetMethodID(cls, "<init>", "(J)V");
+        return env->NewObject(cls, ctor, reinterpret_cast<jlong>(tib));
+    }
+
+    JNIEXPORT jobject JNICALL Java_tech_lib_bgfx_jni_Bgfx_begin(JNIEnv* env, jclass clazz) {
+        bgfx::Encoder* encoder = bgfx::begin();
+
+        if (!encoder) {
+            return nullptr;
+        }
+
+        // Find BgfxEncoder class and constructor
+        jclass encoderClass = env->FindClass("tech/lib/bgfx/util/BgfxEncoder");
+        jmethodID constructor = env->GetMethodID(encoderClass, "<init>", "(J)V");
+
+        // Create and return the Java BgfxEncoder object wrapping the native pointer
+        return env->NewObject(encoderClass, constructor, (jlong) encoder);
+    }
+
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_util_BgfxEncoder_end(JNIEnv* env, jobject obj) {
+        jclass cls = env->GetObjectClass(obj);
+        jmethodID mid = env->GetMethodID(cls, "getPtr", "()J");
+        jlong ptr = env->CallLongMethod(obj, mid);
+
+        bgfx::end((bgfx::Encoder*) ptr);
+    }
+
+    JNIEXPORT jlong JNICALL Java_tech_lib_bgfx_jni_Bgfx_STATE_1BLEND_1FUNC(JNIEnv* env, jclass, jlong src, jlong dst) {
+        return BGFX_STATE_BLEND_FUNC(src, dst);
+    }
+
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_setUniform(JNIEnv* env, jclass clazz, jint uniformHandle, jfloatArray lodEnabled) {
+
+        // Get the array length
+        jsize length = env->GetArrayLength(lodEnabled);
+
+        // Create a float array to hold the values
+        jfloat* lodEnabledElements = env->GetFloatArrayElements(lodEnabled, JNI_FALSE);
+
+        // Pass the array to bgfx::setUniform
+        bgfx::UniformHandle handle = { static_cast<uint16_t>(uniformHandle) };
+        bgfx::setUniform(handle, lodEnabledElements,  static_cast<uint16_t>(length));
+
+        // Release the array elements when done
+        env->ReleaseFloatArrayElements(lodEnabled, lodEnabledElements, 0);
     }
 }

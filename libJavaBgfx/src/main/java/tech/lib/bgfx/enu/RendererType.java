@@ -1,4 +1,4 @@
-package tech.lib.bgfx.jni;
+package tech.lib.bgfx.enu;
 
 import lombok.Getter;
 
@@ -11,5 +11,9 @@ public enum RendererType {
 
     RendererType(int value) {
         this.value = value;
+    }
+
+    public static RendererType fromInt(int value) {
+        return values()[value];
     }
 }
