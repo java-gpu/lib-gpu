@@ -6,6 +6,7 @@ import tech.lib.bgfx.enu.AppConst;
 import tech.lib.ui.data.Gamepad;
 
 import java.awt.event.KeyEvent;
+import java.util.HashMap;
 import java.util.Map;
 
 @Data
@@ -30,6 +31,14 @@ public class Input {
         reset();
     }
 
+    public void reset() {
+        mouseInput.reset();
+        keyboardInput.reset();
+        inputBindingsMap = new HashMap<>();
+        for (Gamepad gamepad : gamepad) {
+            gamepad.reset();
+        }
+    }
 
     public void addBindings(String _name, InputBinding<?> _bindings) {
         inputBindingsMap.put(_name, _bindings);
@@ -37,6 +46,13 @@ public class Input {
 
     public InputBinding<?> removeBindings(String _name) {
         return inputBindingsMap.remove(_name);
+    }
+
+    public void process() {
+        for (Map.Entry<String, InputBinding<?>> entry : inputBindingsMap.entrySet()) {
+            InputBinding<?> binding = entry.getValue();
+            process(binding);
+        }
     }
 
     public void process(InputBinding<?> _bindings) {
@@ -74,21 +90,6 @@ public class Input {
             //TODO
             //cmdExec( (const char*)binding->m_userData);
             log.debug("Warning!! Empty binding callback!!");
-        }
-    }
-
-    public void process() {
-        for (Map.Entry<String, InputBinding<?>> entry : inputBindingsMap.entrySet()) {
-            InputBinding<?> binding = entry.getValue();
-            process(binding);
-        }
-    }
-
-    public void reset() {
-        mouseInput.reset();
-        keyboardInput.reset();
-        for (Gamepad gamepad : gamepad) {
-            gamepad.reset();
         }
     }
 

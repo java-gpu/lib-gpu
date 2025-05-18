@@ -10,8 +10,12 @@
 #include <exception>
 #include <cstdio>
 #include <sstream>
-#include <fstream>         // <-- required
+// <-- required
+#include <fstream>
 #include <cstring>
+// brings in mtxLookAt, mtxProj, etc.
+#include <bx/math.h>
+#include <filesystem>
 
 #include "bgfx_jni.h"
 
@@ -53,12 +57,12 @@ extern "C" {
                 pd.nwh = reinterpret_cast<void*>(windowPointer);
 
                 if (pd.nwh == nullptr) {
-                    jniLog(env, "ERROR", "bgfx_jni.cpp", "❌ No window handler set!");
+                    jniLog(env, "ERROR", "bgfx_jni.cpp#init", "❌ No window handler set!");
                     return JNI_FALSE;
                 } else {
                     std::stringstream ss;
                     ss << "Native window handle = " << pd.nwh;
-                    jniLog(env, "DEBUG", "bgfx_jni.cpp", ss.str().c_str());
+                    jniLog(env, "DEBUG", "bgfx_jni.cpp#init", ss.str().c_str());
                 }
 
                 pd.ndt = nullptr;
@@ -78,25 +82,28 @@ extern "C" {
                 #endif
             #endif
 
-            const bgfx::Caps* caps = bgfx::getCaps();
-            std::stringstream ss;
-            ss << "Renderer type:  " << bgfx::getRendererName(caps->rendererType);
-            jniLog(env, "ERROR", "bgfx_jni.cpp", ss.str().c_str());
-
-            jniLog(env, "DEBUG", "bgfx_jni.cpp", "Starting BGFX initialize...");
-
             init.platformData=pd;
 
             if (gpuIndex >= 0) {
+                std::stringstream ss;
+                ss << "Set custom GPU index: " << gpuIndex << std::endl;
+                jniLog(env, "ERROR", "bgfx_jni.cpp#init", ss.str().c_str());
                 init.deviceId = gpuIndex;
             }
 
+            jniLog(env, "DEBUG", "bgfx_jni.cpp#init", "Starting BGFX initialize...");
             bool success = bgfx::init(init);
             if (!success) {
-                jniLog(env, "ERROR", "bgfx_jni.cpp", "BGFX init failed!");
+                jniLog(env, "ERROR", "bgfx_jni.cpp#init", "BGFX init failed!");
                 return JNI_FALSE;
             } else {
-                jniLog(env, "DEBUG", "bgfx_jni.cpp", "✅ BGFX initialize completed!");
+                jniLog(env, "DEBUG", "bgfx_jni.cpp#init", "✅ BGFX initialize completed!");
+
+                bgfx::RendererType::Enum renderer = bgfx::getRendererType();
+                std::stringstream ss;
+                ss << "Renderer type:  " << getRendererTypeName(renderer) << std::endl;
+                jniLog(env, "ERROR", "bgfx_jni.cpp#init", ss.str().c_str());
+
                 return JNI_TRUE;
             }
         } catch (const std::exception& e) {
@@ -109,10 +116,10 @@ extern "C" {
     }
 
     JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_shutdown(JNIEnv* env, jclass) {
-        jniLog(env, "DEBUG", "bgfx_jni.cpp", "Shutting down BGFX...");
+        jniLog(env, "DEBUG", "bgfx_jni.cpp#shutdown", "Shutting down BGFX...");
         try {
             bgfx::shutdown();
-            printf("🔥 Shutdown!!\n");
+            jniLog(env, "DEBUG", "bgfx_jni.cpp#shutdown", "🔥 Shutdown!!");
         } catch (const std::exception& e) {
             env->ThrowNew(env->FindClass("tech/lib/bgfx/ex/JniRuntimeException"), e.what());
         } catch (...) {
@@ -202,7 +209,18 @@ extern "C" {
 
         std::ifstream file(path, std::ios::binary | std::ios::ate);
         if (!file.is_open()) {
-            env->ThrowNew(env->FindClass("tech/lib/bgfx/ex/JniRuntimeException"), "Fail to open file path!");
+            std::string cwd;
+            try {
+                cwd = std::filesystem::current_path().string();
+            } catch (...) {
+                cwd = "<unable to get current path>";
+            }
+            std::ostringstream oss;
+            oss << "Fail to open file path: " << path
+                << "\nCurrent working directory: " << cwd
+                << "\nerrno: " << errno << " (" << std::strerror(errno) << ")";
+
+             env->ThrowNew(env->FindClass("tech/lib/bgfx/ex/JniRuntimeException"), oss.str().c_str());
             return 0; // Failed to open file
         }
 
@@ -246,7 +264,10 @@ extern "C" {
 
         const bgfx::Memory* mem = bgfx::copy(data, (uint32_t)size);
         bgfx::VertexLayout* layout = reinterpret_cast<bgfx::VertexLayout*>(layoutPtr);
+        jniLog(env, "DEBUG", "bgfx_jni.cpp#createVertexBuffer", "Retrieved vertex layout!!");
+        jniLog(env, "DEBUG", "bgfx_jni.cpp#createVertexBuffer", "Creating vertex buffer handle...");
         bgfx::VertexBufferHandle handle = bgfx::createVertexBuffer(mem, *layout);
+        jniLog(env, "DEBUG", "bgfx_jni.cpp#createVertexBuffer", "Return!");
         return handle.idx;
     }
 
@@ -548,4 +569,55 @@ extern "C" {
         // Release the array elements when done
         env->ReleaseFloatArrayElements(lodEnabled, lodEnabledElements, 0);
     }
+
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_mtxLookAt(JNIEnv* env, jclass clazz, jfloatArray jView, jobject jEye, jobject jAt) {
+        jclass vec3Class = env->GetObjectClass(jEye);
+        jfieldID xField = env->GetFieldID(vec3Class, "x", "F");
+        jfieldID yField = env->GetFieldID(vec3Class, "y", "F");
+        jfieldID zField = env->GetFieldID(vec3Class, "z", "F");
+
+        bx::Vec3 eyeVec = {
+            env->GetFloatField(jEye, xField),
+            env->GetFloatField(jEye, yField),
+            env->GetFloatField(jEye, zField),
+        };
+
+        bx::Vec3 atVec = {
+            env->GetFloatField(jAt, xField),
+            env->GetFloatField(jAt, yField),
+            env->GetFloatField(jAt, zField),
+        };
+
+        float view[16];
+        bx::mtxLookAt(view, eyeVec, atVec);
+
+        env->SetFloatArrayRegion(jView, 0, 16, view);
+    }
+
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_mtxProj
+      (JNIEnv* env, jclass clazz, jfloatArray jProj, jfloat fovy, jfloat aspect, jfloat znear, jfloat zfar, jboolean homogeneousDepth)
+    {
+        jfloat proj[16];
+
+        bx::mtxProj(proj, fovy, aspect, znear, zfar, homogeneousDepth == JNI_TRUE);
+
+        env->SetFloatArrayRegion(jProj, 0, 16, proj);
+    }
+
+    JNIEXPORT void JNICALL Java_tech_lib_bgfx_jni_Bgfx_mtxRotateXY(JNIEnv* env, jclass cls, jfloatArray jResultMatrix, jfloat angleX, jfloat angleY) {
+        if (env->GetArrayLength(jResultMatrix) < 16) {
+            // Matrix must be 4x4
+            return;
+        }
+
+        jfloat* resultPtr = env->GetFloatArrayElements(jResultMatrix, nullptr);
+        if (!resultPtr) return;
+
+        // Call bgfx
+        bx::mtxRotateXY(resultPtr, angleX, angleY);
+
+        // Commit changes back to Java
+        env->ReleaseFloatArrayElements(jResultMatrix, resultPtr, 0);
+    }
+
 }

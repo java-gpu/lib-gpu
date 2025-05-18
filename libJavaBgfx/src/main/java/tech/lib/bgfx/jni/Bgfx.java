@@ -5,12 +5,12 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import tech.lib.bgfx.data.TransientIndexBuffer;
 import tech.lib.bgfx.data.TransientVertexBuffer;
+import tech.lib.bgfx.data.Vec3;
 import tech.lib.bgfx.enu.*;
 import tech.lib.bgfx.graphics.TextureHandle;
 import tech.lib.bgfx.util.BgfxEncoder;
 import tech.lib.bgfx.util.PlatformInfo;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,7 +71,7 @@ public class Bgfx {
      */
     public static native void frame();
 
-    public static long getNativeHandler(JFrame frame, Canvas canvas) {
+    public static long getNativeHandler(Window frame, Canvas canvas) {
         PlatformInfo platformInfo = PlatformInfo.getInstance();
         if (Objects.requireNonNull(platformInfo.getPlatformType()) == PlatformInfo.PlatformType.MACOS) {
             return getMacOSNativeHandlerFromCanvas(canvas);
@@ -217,13 +217,13 @@ public class Bgfx {
     public static native short createUniform(String name, UniformType uniformType);
 
     public static TextureHandle createTexture2D(short width, short height, boolean hasMips, byte numLayers, TextureFormat format, int flags,
-            ByteBuffer mem) {
+                                                ByteBuffer mem) {
         long textureId = createNativeTexture2D(width, height, hasMips, numLayers, format, flags, mem);
         return new TextureHandle(textureId);
     }
 
     private native static long createNativeTexture2D(short width, short height, boolean hasMips, byte numLayers, TextureFormat format,
-            int flags, ByteBuffer mem);
+                                                     int flags, ByteBuffer mem);
 
     public static native void setViewName(int viewId, String name);
 
@@ -244,4 +244,10 @@ public class Bgfx {
     public static native long STATE_BLEND_FUNC(long src, long dst);
 
     public static native void setUniform(int uniformHandle, float[] lodEnabled);
+
+    public static native void mtxLookAt(float[] outView, Vec3 eye, Vec3 at);
+
+    public static native void mtxProj(float[] outProj, float fovy, float aspect, float near, float far, boolean homogeneousDepth);
+
+    public static native void mtxRotateXY(float[] resultMatrix, float angleX, float angleY);
 }

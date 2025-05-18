@@ -8,10 +8,12 @@ import tech.lib.bgfx.jni.Bgfx;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.dnd.DropTarget;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 @Slf4j
 @Getter
-public class AppWindow extends JFrame {
+public class AppWindow extends Frame {
     private final Canvas canvas;
     private final long windowPtr;
     private ShaderHandler shaderHandler;
@@ -24,14 +26,6 @@ public class AppWindow extends JFrame {
         this(width, height, title, false, -1);
     }
 
-    public AppWindow(int width, int height, String title, boolean priority3D) {
-        this(width, height, title, priority3D, -1);
-    }
-
-    public AppWindow(int width, int height, String title, int gpuIndex) {
-        this(width, height, title, false, gpuIndex);
-    }
-
     public AppWindow(int width, int height, String title, boolean priority3D, int gpuIndex) {
         super();
         this.priority3D = priority3D;
@@ -39,9 +33,18 @@ public class AppWindow extends JFrame {
         setSize(width, height);
         setTitle(title);
         setVisible(true);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // Release resources
+                dispose();
+                // Terminate the JVM
+                System.exit(0);
+            }
+        });
         canvas = new Canvas();
-        add(canvas);
+//        add(canvas, BorderLayout.CENTER);
         windowPtr = Bgfx.getNativeHandler(this, canvas);
         log.debug("Windows pointer [{}]", windowPtr);
         initialBgfx();
@@ -52,6 +55,14 @@ public class AppWindow extends JFrame {
         if (!initResult) {
             throw new HeadlessException("Fail to create AppWindow object!");
         }
+    }
+
+    public AppWindow(int width, int height, String title, boolean priority3D) {
+        this(width, height, title, priority3D, -1);
+    }
+
+    public AppWindow(int width, int height, String title, int gpuIndex) {
+        this(width, height, title, false, gpuIndex);
     }
 
     public void shutdownBgfx() {

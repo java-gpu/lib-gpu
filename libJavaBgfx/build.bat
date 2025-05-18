@@ -30,6 +30,7 @@ set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\data\TransientVerte
 set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\data\TransientIndexBuffer.java"
 set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\util\BgfxEncoder.java"
 set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\graphics\TextureHandle.java"
+set "listJavaFile=%listJavaFile% src\main\java\tech\lib\bgfx\data\Vec3.java"
 
 echo "Executing command %COMMAND%"
 if "%COMMAND%" == "generateJNIHeaders" (

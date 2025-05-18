@@ -7,7 +7,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Tự động phát hiện platform
+# PLATFORM
 if (APPLE)
     set(PLATFORM "osx")
     find_library(COCOA_LIBRARY Cocoa)
@@ -31,7 +31,7 @@ elseif (UNIX)
     pkg_check_modules(LIBEVDEV REQUIRED libevdev)
 endif()
 
-# Tự động phát hiện kiến trúc
+# arch
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64" OR CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
     set(ARCH "arm64")
 else()
@@ -83,6 +83,7 @@ set(SOURCES
     event_manager_jni.cpp
     game_pad_event.cpp
     memory_handle_jni.cpp
+    vertex_layout.cpp
 )
 
 if(APPLE)
@@ -125,6 +126,7 @@ if(PLATFORM STREQUAL "windows")
     # Remove default /MDd
     string(REGEX REPLACE "/MDd" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
     string(REGEX REPLACE "/MDd" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+    add_definitions(-DNOMINMAX)
 
     target_link_libraries(bgfx_jni
         PRIVATE

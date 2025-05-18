@@ -6,7 +6,9 @@ import imgui.flag.ImGuiBackendFlags;
 import imgui.flag.ImGuiConfigFlags;
 import imgui.internal.ImGuiContext;
 import imgui.type.ImInt;
+import lombok.Data;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import tech.lib.bgfx.data.TransientIndexBuffer;
 import tech.lib.bgfx.data.TransientVertexBuffer;
 import tech.lib.bgfx.enu.RendererType;
@@ -23,10 +25,13 @@ import tech.lib.imgui.font.FontConstants;
 import tech.lib.imgui.font.FontRangeMerge;
 import tech.lib.imgui.util.FontUtils;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+@Data
+@Slf4j
 public class ImGuiCommon {
 
     public static final int IMGUI_MBUT_LEFT = 1;
@@ -34,10 +39,10 @@ public class ImGuiCommon {
     public static final int IMGUI_MBUT_MIDDLE = 1 << 2;
     @Getter
     private static final ImGuiCommon instance = new ImGuiCommon();
-    public static ByteBuffer s_iconsKenneyTtf = FontUtils.loadFontFromResource("fonts/kenney-icons.ttf");
-    public static ByteBuffer s_iconsFontAwesomeTtf = FontUtils.loadFontFromResource("fonts/fontawesome-webfont.ttf");
-    public static ByteBuffer s_robotoRegularTtf = FontUtils.loadFontFromResource("fonts/Roboto-Regular.ttf");
-    public static ByteBuffer s_robotoMonoRegularTtf = FontUtils.loadFontFromResource("fonts/roboto-mono/Roboto-Regular.ttf");
+    public static ByteBuffer s_iconsKenneyTtf = FontUtils.loadFontFromClassPath("fonts/kenney-icon-font.ttf");
+    public static ByteBuffer s_iconsFontAwesomeTtf = FontUtils.loadFontFromClassPath("fonts/fontawesome-webfont.ttf");
+    public static ByteBuffer s_robotoRegularTtf = FontUtils.loadFontFromClassPath("fonts/Roboto-Regular.ttf");
+    public static ByteBuffer s_robotoMonoRegularTtf = FontUtils.loadFontFromClassPath("fonts/roboto-mono/RobotoMono-Regular.ttf");
     public static FontRangeMerge[] s_fontRangeMerge =
             new FontRangeMerge[]{new FontRangeMerge(s_iconsKenneyTtf, s_iconsKenneyTtf.remaining(), FontConstants.ICON_RANGE_KI),
                     new FontRangeMerge(s_iconsFontAwesomeTtf, s_iconsFontAwesomeTtf.remaining(), FontConstants.ICON_RANGE_FA),
@@ -54,19 +59,20 @@ public class ImGuiCommon {
     private short u_imageLodEnabled;
     private long m_imageProgram;
     private long m_program;
-    private VertexLayout m_layout;
+    private VertexLayout layout;
 
     private ImGuiCommon() {
+        // Contact
+        imGuiContext = ImGui.createContext();
         // Singleton
         mFont = new HashMap<>();
         // ImGuiIO
         imGuiIO = ImGui.getIO();
         imGuiIO.addConfigFlags(ImGuiConfigFlags.DockingEnable);
-        // Contact
-        imGuiContext = ImGui.createContext();
     }
 
-    public void create(float _fontSize) {
+    public void create(float fontSize) {
+        log.debug("Creating ImGUI with front size {}", fontSize);
         m_viewId = 255;
         m_lastScroll = 0;
         m_last = BxTimer.getHPCounter();
@@ -98,8 +104,8 @@ public class ImGuiCommon {
         m_imageProgram = Bgfx.createProgram(vsImage, fsImage, true);
 
         // Define ImGui vertex layout
-        m_layout = new VertexLayout(Bgfx.getRendererType());
-        m_layout.add(Attrib.POSITION, 2, AttribType.FLOAT).add(Attrib.TEXCOORD0, 2, AttribType.FLOAT)
+        layout = new VertexLayout(Bgfx.getRendererType());
+        layout.add(Attrib.POSITION, 2, AttribType.FLOAT).add(Attrib.TEXCOORD0, 2, AttribType.FLOAT)
                 .add(Attrib.COLOR0, 4, AttribType.UINT8, true).end();
 
         // Create sampler uniform
@@ -119,8 +125,8 @@ public class ImGuiCommon {
         config.setGlyphRanges(ranges);
 
         // Add main fonts
-        ImFont regularFont = fonts.addFontFromMemoryTTF(s_robotoRegularTtf.array(), _fontSize, config);
-        ImFont monoFont = fonts.addFontFromMemoryTTF(s_robotoMonoRegularTtf.array(), _fontSize - 3.0f, config);
+        ImFont regularFont = fonts.addFontFromMemoryTTF(s_robotoRegularTtf.array(), fontSize, config);
+        ImFont monoFont = fonts.addFontFromMemoryTTF(s_robotoMonoRegularTtf.array(), fontSize - 3.0f, config);
 
         // Store fonts (assuming mFont is an array or map)
         mFont.put(ImGuiFont.REGULAR, regularFont);
@@ -132,7 +138,7 @@ public class ImGuiCommon {
 
         for (FontRangeMerge frm : s_fontRangeMerge) {
             config.setGlyphRanges(frm.getRanges());
-            fonts.addFontFromMemoryTTF(frm.getData().array(), _fontSize - 3.0f, config);
+            fonts.addFontFromMemoryTTF(frm.getData().array(), fontSize - 3.0f, config);
         }
 
         final ImInt outWidth = new ImInt();
@@ -144,8 +150,11 @@ public class ImGuiCommon {
 
         m_texture = Bgfx.createTexture2D((short) width, (short) height, false, (byte) 1, TextureFormat.BGRA8, 0, texData);
 
+        ImGui.newFrame();
+        log.debug("Calling ImGui.dockSpaceOverViewport() ...");
         ImGui.dockSpaceOverViewport();
         // ImGui::InitDockContext();
+        log.debug("Creation Finished!");
     }
 
     public void setupStyle(boolean _dark) {
@@ -161,8 +170,11 @@ public class ImGuiCommon {
     }
 
     private long createEmbeddedShader(RendererType type, String name) {
-        // TODO
-        return 0;
+        try {
+            return Bgfx.loadShaderFromClasspathMemory("embeded-shader/" + name + ".sc");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void destroy() {
@@ -177,8 +189,10 @@ public class ImGuiCommon {
         Bgfx.destroyProgram(m_program);
     }
 
-    public void beginFrame(int _mx, int _my, int _button, int _scroll, int _width, int _height, char _inputChar, long _viewId) {
-        addInputCharacter(_inputChar);
+    public void beginFrame(int _mx, int _my, int _button, int _scroll, int _width, int _height, Character _inputChar) {
+        if (_inputChar != null) {
+            addInputCharacter(_inputChar);
+        }
 
         imGuiIO.setDisplaySize(new ImVec2((float) _width, (float) _height));
 
@@ -209,6 +223,11 @@ public class ImGuiCommon {
         }
 
         imGuiIO.addInputCharacter(c);
+    }
+
+    public void endFrame() {
+        ImGui.render();
+        render(ImGui.getDrawData());
     }
 
     public void render(ImDrawData drawData) {
@@ -244,11 +263,11 @@ public class ImGuiCommon {
             var idxBuffer = drawData.getCmdListIdxBufferData(ii);
             var indexSize = idxBuffer.array().length / numIndices;
 
-            if (!checkAvailTransientBuffers(numVertices, m_layout.getLayoutPtr(), numIndices)) {
+            if (!checkAvailTransientBuffers(numVertices, layout.getLayoutPtr(), numIndices)) {
                 break;
             }
 
-            TransientVertexBuffer tvb = Bgfx.allocTransientVertexBuffer(numVertices, m_layout.getLayoutPtr());
+            TransientVertexBuffer tvb = Bgfx.allocTransientVertexBuffer(numVertices, layout.getLayoutPtr());
             TransientIndexBuffer tib = Bgfx.allocTransientIndexBuffer(numIndices, ImDrawData.sizeOfImDrawIdx() >= 4);
 
             tvb.copyFrom(vtxBuffer);

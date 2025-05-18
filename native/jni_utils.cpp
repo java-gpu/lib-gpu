@@ -45,7 +45,7 @@ void jniLog(JNIEnv* env, const char* level, const char* fileName, const char* me
 }
 
 // Convert Java enum to bgfx::RendererType::Enum
-bgfx::RendererType::Enum toRendererType(JNIEnv* env, jobject jRendererType) {
+bgfx::RendererType::Enum fromJRendererToBgfxRendererType(JNIEnv* env, jobject jRendererType) {
     jclass enumClass = env->GetObjectClass(jRendererType);
     jmethodID ordinalMethod = env->GetMethodID(enumClass, "ordinal", "()I");
     jint ordinal = env->CallIntMethod(jRendererType, ordinalMethod);
@@ -56,7 +56,7 @@ bgfx::RendererType::Enum toRendererType(JNIEnv* env, jobject jRendererType) {
 // JNI method to map bgfx::Caps::Limits to Java BgfxLimits
 jobject fromLimits(JNIEnv* env, const bgfx::Caps::Limits& limits) {
     // Find the Java BgfxLimits class
-    jclass limitsClass = env->FindClass("com/example/yourpackage/BgfxLimits");
+    jclass limitsClass = env->FindClass("tech/lib/bgfx/jni/BgfxLimits");
     if (limitsClass == nullptr) {
         // Handle error if class is not found
         return nullptr;
@@ -99,4 +99,20 @@ jobject fromLimits(JNIEnv* env, const bgfx::Caps::Limits& limits) {
     );
 
     return limitsObject;
+}
+
+const char* getRendererTypeName(bgfx::RendererType::Enum type) {
+    switch (type) {
+        case bgfx::RendererType::Noop: return "Noop";
+        case bgfx::RendererType::Agc: return "Agc";
+        case bgfx::RendererType::Direct3D11: return "Direct3D11";
+        case bgfx::RendererType::Direct3D12: return "Direct3D12";
+        case bgfx::RendererType::Gnm: return "Gnm";
+        case bgfx::RendererType::Metal: return "Metal";
+        case bgfx::RendererType::Nvn: return "Nvn";
+        case bgfx::RendererType::OpenGLES: return "OpenGL";
+        case bgfx::RendererType::OpenGL: return "OpenGLES";
+        case bgfx::RendererType::Vulkan: return "Vulkan";
+        default: return "Unknown";
+    }
 }
