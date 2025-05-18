@@ -1,5 +1,4 @@
 export COMMAND="$1"
-
 export OS_TYPE=$(uname)
 
 executeCommandInDir() {

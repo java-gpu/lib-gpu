@@ -3,6 +3,9 @@
 #include <string>
 #include <jni.h>
 #include "jni_utils.h"
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #include <cstdint>
 #include <unordered_map>

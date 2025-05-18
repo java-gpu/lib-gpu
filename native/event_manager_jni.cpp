@@ -17,6 +17,9 @@
 #include <stddef.h>   // for alignof
 
 #ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 // for _aligned_malloc on Windows
 #include <malloc.h>

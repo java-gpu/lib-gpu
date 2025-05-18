@@ -13,9 +13,11 @@ extern "C" {
 
 void jniLog(JNIEnv* env, const char* level, const char* fileName, const char* message);
 
-bgfx::RendererType::Enum toRendererType(JNIEnv* env, jobject jRendererType);
+bgfx::RendererType::Enum fromJRendererToBgfxRendererType(JNIEnv* env, jobject jRendererType);
 
 jobject fromLimits(JNIEnv* env, const bgfx::Caps::Limits& limits);
+
+const char* getRendererTypeName(bgfx::RendererType::Enum type);
 
 #ifdef __cplusplus
 }

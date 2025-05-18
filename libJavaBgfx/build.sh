@@ -39,6 +39,7 @@ export listJavaFile=(
      "src/main/java/tech/lib/bgfx/data/TransientIndexBuffer.java"
      "src/main/java/tech/lib/bgfx/util/BgfxEncoder.java"
      "src/main/java/tech/lib/bgfx/graphics/TextureHandle.java"
+     "src/main/java/tech/lib/bgfx/data/Vec3.java"
 )
 
 includeScriptPath=../support-scripts/generateJniHeader.sh

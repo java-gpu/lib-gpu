@@ -1,5 +1,7 @@
 @echo off
 set COMMAND=%1
+set commandToExec=%2
+set directory=%3
 
 REM Check processor architecture
 echo Processor architecture: %PROCESSOR_ARCHITECTURE%
@@ -24,12 +26,10 @@ if errorlevel 1 (
 
 echo Executing command %COMMAND%
 if "%COMMAND%" == "executeCommandInDir" (
-  set commandToExec=%2
-  set directory=%3
   call :executeCommandInDir %commandToExec% %directory%
   goto :eof
 )else if "%COMMAND%" == "buildBgfx" (
-  setlocal enabledelayedexpansion (
+  setlocal enabledelayedexpansion
       pushd %cd%
       cd ..\external\bx
 
@@ -47,7 +47,6 @@ if "%COMMAND%" == "executeCommandInDir" (
       call devenv .build/projects/vs2022/bgfx.sln /Build "Debug|x64"
       call devenv .build/projects/vs2022/bgfx.sln /Build "Release|x64"
       popd
-  )
   endlocal
 
   goto :eof
@@ -73,6 +72,7 @@ goto :eof
   pushd %cd%
   cd %directory%
   echo Now in: %cd%
+  echo Calling command [%commandToExec%]
   call %commandToExec%
   popd
   echo Back to: %cd%
