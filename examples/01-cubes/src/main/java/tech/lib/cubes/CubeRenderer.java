@@ -6,7 +6,7 @@ import imgui.flag.ImGuiCond;
 import imgui.type.ImInt;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import tech.lib.bgfx.app.AppWindow;
+import tech.lib.bgfx.app.AwtAppWindow;
 import tech.lib.bgfx.data.IndexBufferHandle;
 import tech.lib.bgfx.data.Mat4;
 import tech.lib.bgfx.data.Vec3;
@@ -31,7 +31,7 @@ public class CubeRenderer {
             {BgfxStateFlag.NONE, BgfxStateFlag.PT_TRISTRIP, BgfxStateFlag.PT_LINES, BgfxStateFlag.PT_LINESTRIP, BgfxStateFlag.PT_POINTS};
     private final ImGuiCommon imGuiCommon;
     private final Entry entry;
-    private AppWindow window;
+    private AwtAppWindow window;
     private long vbh;
     private long[] ibhs;
     private long timeOffset;
@@ -47,15 +47,15 @@ public class CubeRenderer {
     private VertexBufferHandle m_vbh;
     private IndexBufferHandle[] m_ibh = new IndexBufferHandle[s_ptState.length];
 
-    public CubeRenderer(AppWindow appWindow, BgfxResetFlag reset, BgfxDebugFlag debug) {
+    public CubeRenderer(AwtAppWindow appWindow, BgfxResetFlag reset, BgfxDebugFlag debug) {
         this.debug = debug;
         this.reset = reset;
-        this.entry = new Entry(appWindow.getWindowPtr());
+        this.entry = new Entry(appWindow.getWindowPointer());
         this.imGuiCommon = ImGuiCommon.getInstance();
         init(appWindow);
     }
 
-    private void init(AppWindow appWindow) {
+    private void init(AwtAppWindow appWindow) {
         this.window = appWindow;
         var vertexUtil = VertexUtil.getInstance();
         timeOffset = BxTimer.getHPCounter();
@@ -85,7 +85,7 @@ public class CubeRenderer {
             }
             Bgfx.frame();
             imGuiCommon.beginFrame(latestMouseEvent.getX(), latestMouseEvent.getY(), button, latestMouseEvent.getZ(), window.getWidth(),
-                    window.getHeight(), null);
+                                   window.getHeight(), null);
 
             //            showExampleDialog(this);
             //
@@ -118,7 +118,7 @@ public class CubeRenderer {
 
                 float[] proj = new float[16];
                 Bgfx.mtxProj(proj, 60.0f, (float) window.getWidth() / window.getHeight(), 0.1f, 100.0f,
-                        Bgfx.getCaps().isHomogeneousDepth());
+                             Bgfx.getCaps().isHomogeneousDepth());
                 Bgfx.setViewTransform(0, view, proj);
 
                 // Set view 0 default viewport.
@@ -184,16 +184,16 @@ public class CubeRenderer {
         float[] model = Mat4.rotateY(time);
         log.debug("Bgfx.setTransform");
         Bgfx.setTransform(model);
-//        log.debug("Bgfx.setVertexBuffer");
-//        Bgfx.setVertexBuffer(0, vbh);
-//        IndexBufferHandle ibh = m_ibh[m_pt.get()];
-//        Bgfx.setIndexBuffer(ibh.getPtr());
-//        log.debug("Bgfx.setState");
-//        Bgfx.setState(BgfxStateFlag.DEFAULT.getValue());
-//        log.debug("Bgfx.submit");
-//        Bgfx.submit(0, window.getShaderHandler().getProgram());
-//        log.debug("Bgfx.frame");
-//        Bgfx.frame();
+        //        log.debug("Bgfx.setVertexBuffer");
+        //        Bgfx.setVertexBuffer(0, vbh);
+        //        IndexBufferHandle ibh = m_ibh[m_pt.get()];
+        //        Bgfx.setIndexBuffer(ibh.getPtr());
+        //        log.debug("Bgfx.setState");
+        //        Bgfx.setState(BgfxStateFlag.DEFAULT.getValue());
+        //        log.debug("Bgfx.submit");
+        //        Bgfx.submit(0, window.getShaderHandler().getProgram());
+        //        log.debug("Bgfx.frame");
+        //        Bgfx.frame();
     }
 
     public void shutdown() {

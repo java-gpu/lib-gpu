@@ -1,74 +1,18 @@
 package tech.lib.bgfx.app;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
 import tech.lib.bgfx.jni.Bgfx;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.dnd.DropTarget;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+public interface AppWindow {
+    void initialBgfx();
 
-@Slf4j
-@Getter
-public class AppWindow extends Frame {
-    private final Canvas canvas;
-    private final long windowPtr;
-    private ShaderHandler shaderHandler;
-    private boolean priority3D;
-    private int gpuIndex;
-    @Setter
-    private DropTarget dropTarget;
-
-    public AppWindow(int width, int height, String title) {
-        this(width, height, title, false, -1);
-    }
-
-    public AppWindow(int width, int height, String title, boolean priority3D, int gpuIndex) {
-        super();
-        this.priority3D = priority3D;
-        this.gpuIndex = gpuIndex;
-        setSize(width, height);
-        setTitle(title);
-        setVisible(true);
-        setLayout(new BorderLayout());
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                // Release resources
-                dispose();
-                // Terminate the JVM
-                System.exit(0);
-            }
-        });
-        canvas = new Canvas();
-//        add(canvas, BorderLayout.CENTER);
-        windowPtr = Bgfx.getNativeHandler(this, canvas);
-        log.debug("Windows pointer [{}]", windowPtr);
-        initialBgfx();
-    }
-
-    private void initialBgfx() {
-        boolean initResult = Bgfx.init(windowPtr, canvas, priority3D, gpuIndex);
-        if (!initResult) {
-            throw new HeadlessException("Fail to create AppWindow object!");
-        }
-    }
-
-    public AppWindow(int width, int height, String title, boolean priority3D) {
-        this(width, height, title, priority3D, -1);
-    }
-
-    public AppWindow(int width, int height, String title, int gpuIndex) {
-        this(width, height, title, false, gpuIndex);
-    }
-
-    public void shutdownBgfx() {
+    default void shutdownBgfx() {
+        var log = LoggerFactory.getLogger(getClass());
         log.debug("🔴 bgfx shutdown");
-        SwingUtilities.invokeLater(Bgfx::shutdown);
+        Bgfx.shutdown();
     }
+
+    void shutdownWindow();
 
     /**
      * Load shader program + set as shaderHandler for this windows + return loaded program.
@@ -77,11 +21,24 @@ public class AppWindow extends Frame {
      * @param fsShaderPath Fragment Shader Handler path
      * @return Loaded Shader program
      */
-    public ShaderHandler loadShaderProgram(String vsShaderPath, String fsShaderPath) {
+    default ShaderHandler loadShaderProgram(String vsShaderPath, String fsShaderPath) {
         long vs = Bgfx.loadShader(vsShaderPath);
         long fs = Bgfx.loadShader(fsShaderPath);
         long program = Bgfx.createProgram(vs, fs, true);
-        this.shaderHandler = new ShaderHandler(vs, fs, program);
-        return this.shaderHandler;
+        var shaderHandler = new ShaderHandler(vs, fs, program);
+        setShaderHandler(shaderHandler);
+        return shaderHandler;
     }
+
+    void setShaderHandler(ShaderHandler handler);
+
+    long getWindowPointer();
+
+    boolean isPrioritize3DEngine();
+
+    void setPrioritize3DEngine(boolean prioritize3DEngine);
+
+    int getGpuIndex();
+
+    void setGpuIndex(int gpuIndex);
 }

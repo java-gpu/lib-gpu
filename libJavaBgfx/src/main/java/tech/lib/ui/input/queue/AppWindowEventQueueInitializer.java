@@ -1,14 +1,14 @@
 package tech.lib.ui.input.queue;
 
 import lombok.extern.slf4j.Slf4j;
-import tech.lib.bgfx.app.AppWindow;
+import tech.lib.bgfx.app.AwtAppWindow;
 
 import java.awt.dnd.DnDConstants;
 
 @Slf4j
 public class AppWindowEventQueueInitializer {
 
-    public static void monitorWindowEventQueue(AppWindow appWindow) {
+    public static void monitorWindowEventQueue(AwtAppWindow appWindow) {
         appWindow.addFocusListener(new FocusEventQueueListener(appWindow));
         appWindow.addKeyListener(new KeyEventQueueListener(appWindow));
         appWindow.addMouseListener(new MouseEventQueueListener(appWindow));

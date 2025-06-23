@@ -1,15 +1,15 @@
 package tech.lib.ui.input.queue;
 
-import tech.lib.bgfx.app.AppWindow;
+import tech.lib.bgfx.app.AwtAppWindow;
 
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
 public class MouseWheelEventQueueListener implements MouseWheelListener {
 
-    private final AppWindow appWindow;
+    private final AwtAppWindow appWindow;
 
-    public MouseWheelEventQueueListener(AppWindow appWindow) {
+    public MouseWheelEventQueueListener(AwtAppWindow appWindow) {
         this.appWindow = appWindow;
     }
 

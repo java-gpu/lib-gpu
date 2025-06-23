@@ -19,6 +19,10 @@
 
 #include "bgfx_jni.h"
 
+#include <GLFW/glfw3.h>
+// Needed for native access: X11/Wayland
+#include <GLFW/glfw3native.h>
+
 /**
 * JNI Type Codes Summary (for quick reference):
   JNI Code ->	Java Type
@@ -44,65 +48,84 @@ bgfx::TextureFormat::Enum javaToBgfxTextureFormat(JNIEnv* env, jobject format) {
 
 extern "C" {
 
-    JNIEXPORT jboolean JNICALL Java_tech_lib_bgfx_jni_Bgfx_init(JNIEnv* env, jclass clzz, jlong windowPointer, jobject canvas, jboolean priority3D, jint gpuIndex) {
-        try {
+    JNIEXPORT jboolean JNICALL Java_tech_lib_bgfx_jni_Bgfx_initForAwt(JNIEnv* env, jclass clzz, jlong windowPointer, jobject canvas, jboolean priority3D, jint gpuIndex) {
+        return bgfx_initGeneral(env, clzz, windowPointer, priority3D, gpuIndex, 1, canvas);
+    }
 
+    JNIEXPORT jboolean JNICALL Java_tech_lib_bgfx_jni_Bgfx_initForGlfw(JNIEnv* env, jclass clzz, jlong windowPointer, jboolean priority3D, jint gpuIndex) {
+        return bgfx_initGeneral(env, clzz, windowPointer, priority3D, gpuIndex, 2, nullptr);
+    }
+
+    /**
+     * windowType: 1 is AWT, 2 is GLFW
+     */
+    jboolean bgfx_initGeneral(JNIEnv* env, jclass clzz, jlong windowPointer, jboolean priority3D, jint gpuIndex, int8_t windowType, jobject canvas) {
+        try {
             bgfx::Init init;
+            bgfx::PlatformData pd{};
+
             #ifdef __linux__
-                bgfx::PlatformData pd = setupLinuxPlatformData(env, canvas);
-                bgfx::setPlatformData(pd);
                 init.type = bgfx::RendererType::Vulkan;
+                jniLog(env, "ERROR", "bgfx_jni.cpp#initGeneral", "BGFX using Vulkan as backend!");
+                if (windowType == 1 && canvas != null) {
+                    pd = setupLinuxPlatformDataForAwt(env, canvas);
+                } else if (windowType == 2) {
+                    GLFWwindow* window = reinterpret_cast<GLFWwindow*>(windowPointer);
+                    pd = setupLinuxPlatformDataForGlfw(env, window);
+                }
             #else
-                bgfx::PlatformData pd{};
                 pd.nwh = reinterpret_cast<void*>(windowPointer);
 
                 if (pd.nwh == nullptr) {
-                    jniLog(env, "ERROR", "bgfx_jni.cpp#init", "❌ No window handler set!");
+                    jniLog(env, "ERROR", "bgfx_jni.cpp#initForGlfw", "❌ No window handler set!");
                     return JNI_FALSE;
                 } else {
                     std::stringstream ss;
                     ss << "Native window handle = " << pd.nwh;
-                    jniLog(env, "DEBUG", "bgfx_jni.cpp#init", ss.str().c_str());
+                    jniLog(env, "DEBUG", "bgfx_jni.cpp#initForGlfw", ss.str().c_str());
                 }
 
                 pd.ndt = nullptr;
                 pd.context = nullptr;
                 pd.backBuffer = nullptr;
                 pd.backBufferDS = nullptr;
-                bgfx::setPlatformData(pd);
 
                 #ifdef __APPLE__
                     init.type = bgfx::RendererType::Metal;
+                    jniLog(env, "ERROR", "bgfx_jni.cpp#initGeneral", "BGFX using Metal as backend!");
                 #else
                     if (priority3D) {
                         init.type = bgfx::RendererType::Direct3D12;
+                        jniLog(env, "ERROR", "bgfx_jni.cpp#initGeneral", "BGFX using Direct3D12 as backend!");
                     } else {
                         init.type = bgfx::RendererType::Direct3D11;
+                        jniLog(env, "ERROR", "bgfx_jni.cpp#initGeneral", "BGFX using Direct3D11 as backend!");
                     }
                 #endif
             #endif
 
-            init.platformData=pd;
+            bgfx::setPlatformData(pd);
+            init.platformData = pd;
 
             if (gpuIndex >= 0) {
                 std::stringstream ss;
                 ss << "Set custom GPU index: " << gpuIndex << std::endl;
-                jniLog(env, "ERROR", "bgfx_jni.cpp#init", ss.str().c_str());
+                jniLog(env, "ERROR", "bgfx_jni.cpp#initGeneral", ss.str().c_str());
                 init.deviceId = gpuIndex;
             }
 
-            jniLog(env, "DEBUG", "bgfx_jni.cpp#init", "Starting BGFX initialize...");
+            jniLog(env, "DEBUG", "bgfx_jni.cpp#initGeneral", "Starting BGFX initialize...");
             bool success = bgfx::init(init);
             if (!success) {
-                jniLog(env, "ERROR", "bgfx_jni.cpp#init", "BGFX init failed!");
+                jniLog(env, "ERROR", "bgfx_jni.cpp#initGeneral", "BGFX init failed!");
                 return JNI_FALSE;
             } else {
-                jniLog(env, "DEBUG", "bgfx_jni.cpp#init", "✅ BGFX initialize completed!");
+                jniLog(env, "DEBUG", "bgfx_jni.cpp#initGeneral", "✅ BGFX initialize completed!");
 
                 bgfx::RendererType::Enum renderer = bgfx::getRendererType();
                 std::stringstream ss;
                 ss << "Renderer type:  " << getRendererTypeName(renderer) << std::endl;
-                jniLog(env, "ERROR", "bgfx_jni.cpp#init", ss.str().c_str());
+                jniLog(env, "ERROR", "bgfx_jni.cpp#initGeneral", ss.str().c_str());
 
                 return JNI_TRUE;
             }
