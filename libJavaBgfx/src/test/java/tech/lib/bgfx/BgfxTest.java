@@ -5,7 +5,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import tech.lib.bgfx.app.AppWindow;
+import tech.lib.bgfx.app.AwtAppWindow;
 import tech.lib.bgfx.jni.Bgfx;
 import tech.lib.bgfx.util.JniLogger;
 
@@ -32,7 +32,7 @@ public class BgfxTest {
     public void testInit() throws Throwable {
 
         log.debug("Starting BGFX Test....");
-        AppWindow window = new AppWindow(1280, 720, "BGFX Test Window");
+        AwtAppWindow window = new AwtAppWindow(1280, 720, "BGFX Test Window");
         assertNotNull(window);
 
         for (int i = 0; i < 3; i++) {
@@ -40,7 +40,7 @@ public class BgfxTest {
             log.debug("🌀 frame {}", (i + 1));
         }
         Thread.sleep(1000);
-//        SwingUtilities.invokeLater(window::dispose);
+        //        SwingUtilities.invokeLater(window::dispose);
         log.debug("✅ bgfx shutdown successfully!");
     }
 }

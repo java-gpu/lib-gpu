@@ -2,7 +2,7 @@ package tech.lib.cubes;
 
 import ch.qos.logback.core.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
-import tech.lib.bgfx.app.AppWindow;
+import tech.lib.bgfx.app.AwtAppWindow;
 import tech.lib.bgfx.app.ShaderHandler;
 import tech.lib.bgfx.enu.AppConst;
 import tech.lib.bgfx.enu.BgfxDebugFlag;
@@ -37,7 +37,7 @@ public class StartingPoint {
         }
         final String vsShaderPathFinal = vsShaderPath;
         final String fsShaderPathFinal = fsShaderPath;
-        AppWindow appWindow = new AppWindow(AppConst.ENTRY_DEFAULT_WIDTH, AppConst.ENTRY_DEFAULT_HEIGHT, "01-Cube Example");
+        AwtAppWindow appWindow = new AwtAppWindow(AppConst.ENTRY_DEFAULT_WIDTH, AppConst.ENTRY_DEFAULT_HEIGHT, "01-Cube Example");
         ShaderHandler shaderHandler = appWindow.loadShaderProgram(vsShaderPathFinal, fsShaderPathFinal);
         if (shaderHandler == null) {
             log.error("Load shader fail!!");
@@ -56,7 +56,7 @@ public class StartingPoint {
         });
         Thread thread = new Thread(() -> {
             while (true) {
-                var appEvent = EventManager.pollUiEvent(appWindow.getWindowPtr());
+                var appEvent = EventManager.pollUiEvent(appWindow.getWindowPointer());
                 if (appEvent != null) {
                     if (appEvent instanceof CustomMouseEvent) {
                         cubeRenderer.setLatestMouseEvent((CustomMouseEvent) appEvent);

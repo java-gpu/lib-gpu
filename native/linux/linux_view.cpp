@@ -10,7 +10,7 @@
 #include <sstream>
 
 extern "C" {
-    bgfx::PlatformData setupLinuxPlatformData(JNIEnv* env, jobject canvas) {
+    bgfx::PlatformData setupLinuxPlatformDataForAwt(JNIEnv* env, jobject canvas) {
         bgfx::PlatformData pd{};
         JAWT awt;
         awt.version = JAWT_VERSION_1_4;
@@ -68,6 +68,24 @@ extern "C" {
         ds->Unlock(ds);
         awt.FreeDrawingSurface(ds);
 
+        return pd;
+    }
+
+    bgfx::PlatformData setupLinuxPlatformDataForGlfw(JNIEnv* env, GLFWwindow* window) {
+        bgfx::PlatformData pd{};
+
+        const char* session = getenv("XDG_SESSION_TYPE");
+        if (session && strcmp(session, "wayland") == 0) {
+            // Wayland
+            pd.ndt = glfwGetWaylandDisplay();
+            pd.nwh = glfwGetWaylandWindow(window);
+        } else {
+            // X11
+            pd.ndt = glfwGetX11Display();
+            pd.nwh = (void*)(uintptr_t)glfwGetX11Window(window);
+        }
+
+        bgfx::setPlatformData(pd);
         return pd;
     }
 }

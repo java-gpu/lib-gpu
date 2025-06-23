@@ -32,6 +32,7 @@ elseif (UNIX)
 endif()
 
 # arch
+message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR} and CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64" OR CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
     set(ARCH "arm64")
 else()
@@ -61,11 +62,16 @@ include_directories(
     ${BX_DIR}/include
     ${BIMG_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
     ../libJavaBgfx/build/native
     # ../libJavaBgfx/build/generated/sources/headers/java/main
     if(PLATFORM STREQUAL "windows")
         C:/DirectXTK/inc
     endif()
+    # if(PLATFORM STREQUAL "osx")
+    #     /opt/homebrew/include/
+    #     /usr/include
+    # endif()
     if(PLATFORM STREQUAL "linux")
         ${DBUS_INCLUDE_DIRS}
         ${LIBEVDEV_INCLUDE_DIRS}

@@ -11,6 +11,10 @@
 #include <cstdio>
 #include <sstream>
 
+#include <GLFW/glfw3.h>
+// Needed for native access: X11/Wayland
+#include <GLFW/glfw3native.h>
+
 struct PosColorVertex {
     float x, y, z;
     uint32_t abgr;
@@ -31,12 +35,15 @@ bgfx::VertexLayout PosColorVertex::ms_layout;
 
 extern "C" {
 
+    jboolean bgfx_initGeneral(JNIEnv* env, jclass clzz, jlong windowPointer, jboolean priority3D, jint gpuIndex, int8_t windowType, jobject canvas);
+
     #ifdef __APPLE__
         extern void* getNSViewFromCanvas(JNIEnv* env, jobject canvas);
         // extern void* createNativeWindow(JNIEnv* env, int x, int y, int width, int height, const char* title);
     #endif
 
     #ifdef __linux__
-        bgfx::PlatformData setupLinuxPlatformData(JNIEnv* env, jobject canvas);
+        bgfx::PlatformData setupLinuxPlatformDataForAwt(JNIEnv* env, jobject canvas);
+        bgfx::PlatformData setupLinuxPlatformDataForGlfw(JNIEnv* env, GLFWwindow* window);
     #endif
 }

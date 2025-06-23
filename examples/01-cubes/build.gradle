@@ -30,7 +30,9 @@ tasks.register('runExample', JavaExec) {
     if (rootProject.ext.platform == "windows") {
         jvmArgs = ["-Djava.library.path=" +
                            "${layout.buildDirectory.asFile.get().absolutePath}/libs;" +
-                           "${rootProject.layout.projectDirectory.asFile.absolutePath}/external/bgfx/.build/win64_vs2022/bin"
+                           "${rootProject.layout.projectDirectory.asFile.absolutePath}/external/bgfx/.build/win64_vs2022/bin",
+                   '-XX:+ShowMessageBoxOnError',
+                   '-XX:+UseOSErrorReporting'
         ]
     } else if (rootProject.ext.platform == "osx") {
         jvmArgs = ["-Djava.library.path=" +
@@ -40,11 +42,9 @@ tasks.register('runExample', JavaExec) {
     } else if (rootProject.ext.platform == "linux") {
         jvmArgs = ["-Djava.library.path=" +
                            "${layout.buildDirectory.asFile.get().absolutePath}/libs:" +
-                           "${rootProject.layout.projectDirectory.asFile.absolutePath}/external/bgfx/.build/linux64_gcc/bin"
+                           "${rootProject.layout.projectDirectory.asFile.absolutePath}/external/bgfx/.build/linux64_gcc/bin",
+                   '-XX:+ShowMessageBoxOnError',
+                   '-XX:+UseOSErrorReporting'
         ]
     }
-    jvmArgs += [
-        '-XX:+ShowMessageBoxOnError',
-        '-XX:+UseOSErrorReporting'
-    ]
 }

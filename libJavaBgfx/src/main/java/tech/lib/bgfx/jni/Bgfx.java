@@ -46,8 +46,8 @@ public class Bgfx {
      * @param canvas               AWT Canvas. Some platform like linux required it to retrieve information.
      * @return True if success
      */
-    public static boolean init(long windowHandlerPointer, Canvas canvas, int gpuIndex) {
-        return init(windowHandlerPointer, canvas, false, gpuIndex);
+    public static boolean initForAwt(long windowHandlerPointer, Canvas canvas, int gpuIndex) {
+        return initForAwt(windowHandlerPointer, canvas, false, gpuIndex);
     }
 
     /**
@@ -59,7 +59,17 @@ public class Bgfx {
      * @param gpuIndex             GPU index
      * @return True if success
      */
-    public static native boolean init(long windowHandlerPointer, Canvas canvas, boolean priority3D, int gpuIndex);
+    public static native boolean initForAwt(long windowHandlerPointer, Canvas canvas, boolean priority3D, int gpuIndex);
+
+    /**
+     * Init BGFX platform display.
+     *
+     * @param windowHandlerPointer Native window handler pointer.
+     * @param priority3D           Priority to select 3D render type
+     * @param gpuIndex             GPU index
+     * @return True if success
+     */
+    public static native boolean initForGlfw(long windowHandlerPointer, boolean priority3D, int gpuIndex);
 
     /**
      * Shut down BGFX.
@@ -217,13 +227,13 @@ public class Bgfx {
     public static native short createUniform(String name, UniformType uniformType);
 
     public static TextureHandle createTexture2D(short width, short height, boolean hasMips, byte numLayers, TextureFormat format, int flags,
-                                                ByteBuffer mem) {
+            ByteBuffer mem) {
         long textureId = createNativeTexture2D(width, height, hasMips, numLayers, format, flags, mem);
         return new TextureHandle(textureId);
     }
 
     private native static long createNativeTexture2D(short width, short height, boolean hasMips, byte numLayers, TextureFormat format,
-                                                     int flags, ByteBuffer mem);
+            int flags, ByteBuffer mem);
 
     public static native void setViewName(int viewId, String name);
 
